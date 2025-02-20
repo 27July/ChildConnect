@@ -1,3 +1,4 @@
 # ChildConnect
-Application to connect Parents and Techers
- lololol
+Application to connect Parents and Teachers
+
+#Test
