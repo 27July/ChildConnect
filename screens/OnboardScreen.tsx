@@ -18,6 +18,7 @@ export default function OnboardingScreen({ navigation }: Props) {
       <Text style={styles.title}>Welcome to ChildConnect</Text>
       <Text style={styles.subtitle}>Ensuring Every Child’s Safety and Well-being...</Text>
       
+      <Text style={styles.SmallerText}>New here? Lets get you started</Text>
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Login")}>
         <Text style={styles.buttonText}>Get Started</Text>
       </TouchableOpacity>
@@ -54,8 +55,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 60,
   },
+  
   button: {
     backgroundColor: "#6B9080",
     paddingVertical: 12,
@@ -67,8 +69,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+  SmallerText: {
+    marginTop: 7,
+    color: "#666",
+    marginBottom: 5
+  },
   signInText: {
-    marginTop: 10,
+    marginTop: 7,
     color: "#666",
   },
   signInLink: {
