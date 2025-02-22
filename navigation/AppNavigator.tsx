@@ -2,14 +2,14 @@ import React from "react";
 import { createStackNavigator } from "@react-navigation/stack"; //Allow switching between screens
 import { NavigationContainer } from "@react-navigation/native"; //Wraps the whole app to enable navigation
 //import BottomTabNavigator from "./BottomTabNavigator"; //Handle bottom tabs for main app navigation
-import InitialScreen from "../screens/InitialScreen";
+import OnboardScreen from "../screens/OnboardScreen";
 import LoginScreen from "../screens/LoginScreen";
 import { Text } from "react-native"; 
 
 
 
 export type RootStackParamList = {
-    Initial: undefined;
+    Onboard: undefined;
     Login: undefined;
     Main: undefined;
   };
@@ -20,9 +20,9 @@ export default function AppNavigator() {
       <NavigationContainer> 
         <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen
-            name="Initial"
-            component={InitialScreen}
-            options={{ headerTitle: () => <Text>Initial Screen</Text> }} // ✅ Wrap title in <Text>
+            name="Onboard"
+            component={OnboardScreen}
+            options={{ headerTitle: () => <Text>Onboard Screen</Text> }} // ✅ Wrap title in <Text>
             />
             <Stack.Screen
             name="Login"
