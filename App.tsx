@@ -1,7 +1,12 @@
-import React from "react";
-import AppNavigator from "./navigation/AppNavigator"; // Import the main navigator
-
+import { StatusBar } from 'expo-status-bar'; // Import StatusBar
+import React from 'react';
+import AppNavigator from './navigation/AppNavigator';
 
 export default function App() {
-  return <AppNavigator />; // Load the navigation container
+  return (
+    <>
+      <StatusBar style="dark" /> 
+      <AppNavigator />
+    </>
+  );
 }
