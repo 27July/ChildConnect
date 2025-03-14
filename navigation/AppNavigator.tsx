@@ -5,6 +5,7 @@ import BottomTabNavigator from "./BottomTabNavigator"; // ✅ Taskbar Navigation
 import OnboardScreen from "../screens/OnboardScreen";
 import LoginScreen from "../screens/LoginScreen";
 import ClassDetailsScreen from "../screens/ClassDetailsScreen";
+import ChatPage from "../screens/ChatPage";
 
 export type RootStackParamList = {
   Onboard: undefined;
@@ -31,6 +32,9 @@ export default function AppNavigator() {
         {/* Onboarding & Login (If needed later) */}
         <Stack.Screen name="Onboard" component={OnboardScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
+
+        {/* Chat Screen */}
+        <Stack.Screen name="ChatScreen" component={ChatPage} />
       </Stack.Navigator>
     </NavigationContainer>
   );

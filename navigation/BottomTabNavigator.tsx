@@ -4,6 +4,7 @@ import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity, View, StyleSheet } from "react-native";
 import Homepage from "../screens/Homepage";
 import MyClasses from "../screens/MyClasses";
+import ChatsList from "../screens/ChatsList";
 
 const Tab = createBottomTabNavigator();
 
@@ -40,7 +41,7 @@ const BottomTabNavigator = () => {
       {/* Floating Chat Button */}
       <Tab.Screen
         name="Chat"
-        component={Homepage} // Replace with your Chat screen
+        component={ChatsList} // Replace with your Chat screen
         options={{
           tabBarButton: (props) => (
             <CustomTabBarButton {...props}>
