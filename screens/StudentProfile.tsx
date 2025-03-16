@@ -37,6 +37,14 @@ const ChildPresentProfile: React.FC<ChildPresentProfileProps> = () => {
     },
   ];
 
+  const getAttendanceStatusStyle = () => {
+    return {
+      fontSize: 14,
+      fontWeight: "500",
+      color: attendanceStatus.toLowerCase() === "absent" ? "#ff3b30" : "#64b6ac"
+    };
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header with time and status icons */}
@@ -51,7 +59,7 @@ const ChildPresentProfile: React.FC<ChildPresentProfileProps> = () => {
         
         <View style={styles.attendanceIndicator}>
           <Text style={styles.attendanceText}>Today's Attendance: </Text>
-          <Text style={styles.attendanceStatus}>{attendanceStatus}</Text>
+          <Text style={getAttendanceStatusStyle()}>{attendanceStatus}</Text>
         </View>
       </View>
 
@@ -149,11 +157,6 @@ const styles = StyleSheet.create({
   attendanceText: {
     fontSize: 14,
     color: "#40506a",
-  },
-  attendanceStatus: {
-    fontSize: 14,
-    color: "#64b6ac",
-    fontWeight: "500",
   },
   parentsSection: {
     paddingHorizontal: 15,
