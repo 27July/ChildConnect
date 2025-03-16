@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
 
 // Profile Image URL (Replace with real image URL)
-const profileImage = require("../assets/female_profile_pic.webp");
+const profileImage = require("../assets/images/female_profile_pic.webp");
 
 const Homepage = () => {
   return (

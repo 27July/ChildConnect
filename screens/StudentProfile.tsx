@@ -22,18 +22,18 @@ const ChildPresentProfile: React.FC<ChildPresentProfileProps> = () => {
   const classInfo = "1E4";
   const gradeInfo = "P1";
   const attendanceStatus = "Present";
-  const profileImage = require("../assets/female_profile_pic.webp"); // Replace with actual asset path
+  const profileImage = require("../assets/images/female_profile_pic.webp"); // Replace with actual asset path
   
   const parents: ParentInfo[] = [
     {
       name: "Jack",
       relation: "Father",
-      avatar: require("../assets/speed.webp"), // Replace with actual asset path
+      avatar: require("../assets/images/speed.webp"), // Replace with actual asset path
     },
     {
       name: "Chloe",
       relation: "Mother",
-      avatar: require("../assets/ksi.png"), // Replace with actual asset path
+      avatar: require("../assets/images/ksi.png"), // Replace with actual asset path
     },
   ];
 

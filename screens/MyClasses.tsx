@@ -12,7 +12,7 @@ import { useNavigation } from "@react-navigation/native";
 import { FontAwesome5 } from "@expo/vector-icons";
 
 // Import Profile Image
-const profileImage = require("../assets/female_profile_pic.webp");
+const profileImage = require("../assets/images/female_profile_pic.webp");
 
 // Get screen width dynamically
 const screenWidth = Dimensions.get("window").width;

@@ -4,7 +4,7 @@ import { View, Text, Button, StyleSheet, TouchableOpacity } from "react-native";
 import { Image } from "react-native";
 import { StackScreenProps } from "@react-navigation/stack"; // Import type
 import type { RootStackParamList } from "../navigation/AppNavigator"; // Import stack param list
-import OnboardingSVG from "../assets/images/onboarding.svg";
+import OnboardingSVG from "../assets/onboarding.svg";
 
 
 
