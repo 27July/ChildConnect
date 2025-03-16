@@ -4,6 +4,7 @@ import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity, View, StyleSheet } from "react-native";
 import Homepage from "../screens/Homepage";
 import MyClasses from "../screens/MyClasses";
+import StudentProfile from "../screens/StudentProfile";
 
 const Tab = createBottomTabNavigator();
 
@@ -51,7 +52,7 @@ const BottomTabNavigator = () => {
       />
 
       <Tab.Screen name="School" component={Homepage} />
-      <Tab.Screen name="Profile" component={Homepage} />
+      <Tab.Screen name="Profile" component={StudentProfile} />
     </Tab.Navigator>
   );
 };
