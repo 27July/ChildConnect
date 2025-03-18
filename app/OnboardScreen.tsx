@@ -5,6 +5,7 @@ import { Image } from "react-native";
 import { StackScreenProps } from "@react-navigation/stack"; // Import type
 import type { RootStackParamList } from "../navigation/AppNavigator"; // Import stack param list
 import OnboardingSVG from "../assets/onboarding.svg";
+import tw from 'twrnc';
 
 
 
