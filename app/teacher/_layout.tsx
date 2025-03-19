@@ -19,7 +19,7 @@ export default function Layout() {
       {/* Bottom Tab Bar */}
       <View className="flex-row justify-between items-center bg-primary-600 py-3 px-6 rounded-t-2xl absolute bottom-0 w-full">
         <TouchableOpacity
-          onPress={() => router.push("/teacher/home")}
+          onPress={() => router.push("/teacher/home/home")}
           className="items-center"
         >
           <Home size={24} color="white" />
@@ -27,7 +27,7 @@ export default function Layout() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => router.push("/teacher/classes")}
+          onPress={() => router.push("/teacher/classes/classes")}
           className="items-center"
         >
           <BookOpen size={24} color="white" />
@@ -42,7 +42,7 @@ export default function Layout() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => router.push("/teacher/school")}
+          onPress={() => router.push("/teacher/school/school")}
           className="items-center"
         >
           <School size={24} color="white" />
@@ -50,7 +50,7 @@ export default function Layout() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => router.push("/teacher/profile")}
+          onPress={() => router.push("/teacher/profile/profile")}
           className="items-center"
         >
           <User size={24} color="white" />
