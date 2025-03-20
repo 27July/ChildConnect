@@ -30,7 +30,7 @@ export default function Layout() {
             className="items-center"
           >
             <Baby size={24} color="white" />
-            <Text className="text-white text-xs">Classes</Text>
+            <Text className="text-white text-xs">Children</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
