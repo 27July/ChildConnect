@@ -37,7 +37,7 @@ export default function LoginScreen() {
 
       {/* Login Button (full-width) */}
       <View className="mb-4 pt-20">
-        <RouteButton title="Login" to="/loggedin" />
+        <RouteButton title="Login" to="/login" />
       </View>
 
       {/* Register Link */}
