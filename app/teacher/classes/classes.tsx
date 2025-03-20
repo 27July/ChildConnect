@@ -62,7 +62,7 @@ const MyClasses = () => {
           <TouchableOpacity
             className="flex-row items-center bg-white py-5 px-5 rounded-lg mb-3 shadow-card"
             style={{ width: screenWidth * 0.9 }}
-            onPress={() => router.push(`/class-details/${item.id}`)}
+            onPress={() => router.push(`./classdetails`)}
           >
             <View
               className={`w-11 h-11 rounded-full justify-center items-center mr-4`}
