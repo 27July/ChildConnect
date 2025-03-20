@@ -17,7 +17,7 @@ export type ParentInfo = {
       name: "Chloe",
       relation: "Mother",
       avatar: require("../../assets/images/speed.webp"),
-      phoneNumber: "+65 8616 0914",
+      phoneNumber: "+65 96678005",
     },
   ];
   

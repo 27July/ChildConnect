@@ -12,10 +12,10 @@ export default function RouteButton({ title, to }: RouteButtonProps) {
 
   return (
     <TouchableOpacity
-      className="bg-primary-400 py-4 rounded-lg"
+      className="bg-primary-400 py-4 rounded-lg w-full"
       onPress={() => router.push(to)}
     >
-      <Text className="text-grey-700 font-bold text-lg">
+      <Text className="text-white text-lg font-bold text-center">
         {title}
       </Text>
     </TouchableOpacity>
