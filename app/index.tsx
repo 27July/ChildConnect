@@ -19,7 +19,7 @@ export default function OnboardingScreen() {
 
       {/* Reusable button */}
       <View className="flex pb-20 px-6 pt-20">
-        <RouteButton title="Get Started" to="/login" />
+        <RouteButton title="Get Started" to="/profile/" />
       </View>
     </View>
   );
