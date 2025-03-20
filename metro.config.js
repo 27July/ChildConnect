@@ -1,19 +1,20 @@
 const { getDefaultConfig } = require("expo/metro-config");
+const { withNativeWind } = require("nativewind/metro");
 
-module.exports = (() => {
-  const config = getDefaultConfig(__dirname);
+module.exports = withNativeWind(
+  (() => {
+    const config = getDefaultConfig(__dirname);
 
-  const { transformer, resolver } = config;
+    // Remove svg from assetExts and add it to sourceExts
+    config.resolver.assetExts = config.resolver.assetExts.filter((ext) => ext !== "svg");
+    config.resolver.sourceExts.push("svg");
 
-  config.transformer = {
-    ...transformer,
-    babelTransformerPath: require.resolve("react-native-svg-transformer"),
-  };
-  config.resolver = {
-    ...resolver,
-    assetExts: resolver.assetExts.filter((ext) => ext !== "svg"),
-    sourceExts: [...resolver.sourceExts, "svg"],
-  };
+    config.transformer = {
+      ...config.transformer,
+      babelTransformerPath: require.resolve("react-native-svg-transformer"),
+    };
 
-  return config;
-})();
+    return config;
+  })(),
+  { input: "./app/globals.css" } // NativeWind config
+);
