@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { FontAwesome5 } from "@expo/vector-icons";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
@@ -16,14 +16,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ChildScreen() {
   const { childId, name } = useLocalSearchParams();
-  const [isChildMode, setIsChildMode] = useState(false);
+  const router = useRouter();
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // ✅ Toggle Child Mode
-  const toggleChildMode = () => {
-    setIsChildMode((prev) => !prev);
-  };
 
   // ✅ Fetch Child's Location
   useEffect(() => {
@@ -48,7 +43,7 @@ export default function ChildScreen() {
     <SafeAreaView style={styles.container}>
       {/* ✅ Child Mode Toggle Button (Top Right) */}
       <TouchableOpacity
-        onPress={toggleChildMode}
+        onPress={() => router.push("./childmode")} // ✅ Navigate to Child Mode screen
         style={styles.childModeButton}
       >
         <FontAwesome5 name="user-shield" size={20} color="white" />
@@ -92,13 +87,6 @@ export default function ChildScreen() {
           <Text style={styles.errorText}>Unable to fetch location</Text>
         )}
       </View>
-
-      {/* ✅ Child Mode Active Indicator */}
-      {isChildMode && (
-        <View style={styles.childModeBanner}>
-          <Text style={styles.childModeText}>Child Mode Enabled</Text>
-        </View>
-      )}
     </SafeAreaView>
   );
 }
@@ -159,17 +147,5 @@ const styles = StyleSheet.create({
     color: "#ff0000",
     textAlign: "center",
     marginTop: 20,
-  },
-  childModeBanner: {
-    position: "absolute",
-    bottom: 50,
-    backgroundColor: "#285E5E",
-    padding: 10,
-    borderRadius: 10,
-  },
-  childModeText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
   },
 });

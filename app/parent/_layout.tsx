@@ -7,7 +7,8 @@ export default function Layout() {
   const segments = useSegments();
 
   // ✅ Hide tab bar on specific screens
-  const hideTabBar = segments.includes("chatpage");
+  const hideTabBar =
+    segments.includes("chatpage") || segments.includes("childmode");
 
   return (
     <View className="flex-1 bg-background">
