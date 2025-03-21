@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  // SafeAreaView,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { FontAwesome5 } from "@expo/vector-icons";
@@ -18,69 +17,107 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function ChildScreen() {
   const { childId, name } = useLocalSearchParams();
   const router = useRouter();
+
   const [location, setLocation] =
     useState<Location.LocationObjectCoords | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPresent, setIsPresent] = useState(false);
 
-  // ✅ School Location for Geofencing
+  const mapRef = useRef<MapView | null>(null); // MapView reference for programmatic control
+
   const SCHOOL_LOCATION = {
-    latitude: 1.3462227582931519, // replace with real school latitude
-    longitude: 103.68243408203125, // replace with real school longitude
-    radius: 200, // in meters
+    latitude: 1.3462227582931519,
+    longitude: 103.68243408203125,
+    radius: 200,
   };
 
-  // ✅ Fetch Child's Location & Check Presence
+  const [childBackendLocation, setChildBackendLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+
   useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    const toRad = (value: number) => (value * Math.PI) / 180;
+
+    const calculateDistance = (coords1: any, coords2: any) => {
+      const R = 6371e3;
+      const φ1 = toRad(coords1.latitude);
+      const φ2 = toRad(coords2.latitude);
+      const Δφ = toRad(coords2.latitude - coords1.latitude);
+      const Δλ = toRad(coords2.longitude - coords1.longitude);
+
+      const a =
+        Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+        Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    };
+
+    const fetchChildLocationFromBackend = async () => {
+      try {
+        const fetchedLocation = {
+          latitude: 1.3376,
+          longitude: 103.6969,
+        };
+
+        setChildBackendLocation(fetchedLocation);
+
+        const distance = calculateDistance(fetchedLocation, SCHOOL_LOCATION);
+        setIsPresent(distance <= SCHOOL_LOCATION.radius);
+      } catch (error) {
+        console.error("Failed to fetch child location from backend", error);
+      }
+    };
+
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert(
-          "Permission Denied",
-          "Location access is required to track the child's location."
-        );
+        Alert.alert("Permission Denied", "Location access is required.");
         setLoading(false);
         return;
       }
 
-      let currentLocation = await Location.getCurrentPositionAsync({});
+      const currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation.coords);
+
       setLoading(false);
+      await fetchChildLocationFromBackend();
 
-      console.log(currentLocation); //DEBUGGING Current Location
-
-      // ✅ Calculate distance to school
-      const toRad = (value: number) => (value * Math.PI) / 180;
-
-      const calculateDistance = (coords1: any, coords2: any) => {
-        const R = 6371e3; // metres
-        const φ1 = toRad(coords1.latitude);
-        const φ2 = toRad(coords2.latitude);
-        const Δφ = toRad(coords2.latitude - coords1.latitude);
-        const Δλ = toRad(coords2.longitude - coords1.longitude);
-
-        const a =
-          Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-          Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-        const distance = R * c; // in metres
-        return distance;
-      };
-
-      const distance = calculateDistance(
-        currentLocation.coords,
-        SCHOOL_LOCATION
-      );
-
-      console.log("Distance to school:", distance); //DEBUGGING Distance to school
-      setIsPresent(distance <= SCHOOL_LOCATION.radius);
+      // Start polling every 10 seconds
+      intervalId = setInterval(fetchChildLocationFromBackend, 10000);
     })();
+
+    return () => clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    // Fit all markers into view when all coordinates are available
+    if (mapRef.current && location && childBackendLocation) {
+      mapRef.current.fitToCoordinates(
+        [
+          { latitude: location.latitude, longitude: location.longitude },
+          {
+            latitude: childBackendLocation.latitude,
+            longitude: childBackendLocation.longitude,
+          },
+          {
+            latitude: SCHOOL_LOCATION.latitude,
+            longitude: SCHOOL_LOCATION.longitude,
+          },
+        ],
+        {
+          edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+          animated: true,
+        }
+      );
+    }
+  }, [location, childBackendLocation]);
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* ✅ Child Mode Toggle Button (Top Right) */}
       <TouchableOpacity
         onPress={() => router.push("./childmode")}
         style={styles.childModeButton}
@@ -88,7 +125,6 @@ export default function ChildScreen() {
         <FontAwesome5 name="user-shield" size={20} color="white" />
       </TouchableOpacity>
 
-      {/* ✅ Profile Section */}
       <View style={styles.profileSection}>
         <Image
           source={require("../../../assets/images/indianboy.png")}
@@ -97,43 +133,63 @@ export default function ChildScreen() {
         <Text style={styles.childName}>{name}</Text>
         <Text style={styles.schoolName}>Experimental Primary School</Text>
         <Text style={styles.childDetails}>Class: 1E4 Grade: P1</Text>
-        <Text style={styles.presenceStatus}>
-          Status: {isPresent ? "Present" : "Not Present"}
+        <Text style={[styles.presenceStatus, !isPresent && styles.notPresent]}>
+          Status: {isPresent ? "In School" : "Not in School"}
         </Text>
       </View>
 
-      {/* ✅ Live Map */}
       <View style={styles.mapContainer}>
         {loading ? (
           <ActivityIndicator size="large" color="#285E5E" />
-        ) : location ? (
+        ) : childBackendLocation && location ? (
           <MapView
+            ref={mapRef}
             style={styles.map}
             initialRegion={{
-              latitude: location.latitude,
-              longitude: location.longitude,
+              latitude: childBackendLocation.latitude,
+              longitude: childBackendLocation.longitude,
               latitudeDelta: 0.01,
               longitudeDelta: 0.01,
             }}
           >
+            {/* Child's location marker */}
+            <Marker
+              coordinate={childBackendLocation}
+              title="Child's Location"
+              description="Live tracking of your child"
+              pinColor="blue"
+            />
+
+            {/* Your current location marker */}
             <Marker
               coordinate={{
                 latitude: location.latitude,
                 longitude: location.longitude,
               }}
-              title="Child's Location"
-              description="Live tracking of your child"
+              title="Your Location"
+              description="This device"
+              pinColor="green"
+            />
+
+            {/* School marker */}
+            <Marker
+              coordinate={{
+                latitude: SCHOOL_LOCATION.latitude,
+                longitude: SCHOOL_LOCATION.longitude,
+              }}
+              title="School"
+              description="School Location"
+              pinColor="orange"
             />
           </MapView>
         ) : (
-          <Text style={styles.errorText}>Unable to fetch location</Text>
+          <Text style={styles.errorText}>Unable to fetch locations</Text>
         )}
       </View>
     </SafeAreaView>
   );
 }
 
-// ✅ Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -145,7 +201,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 20,
     right: 20,
-    backgroundColor: "#285E5E",
+    backgroundColor: "#6b9080",
     padding: 10,
     borderRadius: 20,
   },
@@ -176,9 +232,12 @@ const styles = StyleSheet.create({
   },
   presenceStatus: {
     fontSize: 16,
-    color: "#285E5E",
     fontWeight: "bold",
     marginTop: 5,
+    color: "#285E5E",
+  },
+  notPresent: {
+    color: "#d9534f",
   },
   mapContainer: {
     width: "90%",
