@@ -14,7 +14,7 @@ export function ChatButton({ onPress }: ChatButtonProps) {
     if(onPress) {
         onPress();
     }else{
-        return <SmallRouteButton title="Chat" to="/Chat" /> // Navigate to Chat screen
+        return <SmallRouteButton title="Chat" to="../parent/chat/chat" /> // Navigate to Chat screen
     }
     
   };

@@ -1,6 +1,5 @@
 import React from "react";
 import { View, Text, Image } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { ContactButton } from "@/components/contactButton";
 import { RecordButton } from "@/components/recordButton";
 //remove later using this because now dont have a database
@@ -47,7 +46,7 @@ const ChildPresentProfile = () => {
               <View className="flex-1">
                 <Text className="text-gray-500 text-">{parent.relation}</Text>
               </View>
-              <ContactButton label="Contact" phoneNumber={parent.phoneNumber} />
+              <ContactButton label="Contact information" phoneNumber={parent.phoneNumber} />
             </View>
           </View>
         ))}
@@ -55,8 +54,8 @@ const ChildPresentProfile = () => {
 
       {/* Records Section */}
       <View className="mt-6">
-        <RecordButton label="Attendance Records" />
-        <RecordButton label="Documentation" />
+        <RecordButton label="Attendance Record" destination="/parent/profile/attendanceRecord" />
+        <RecordButton label="Documentation" destination="/parent/profile/documentation" />
       </View>
     </View>
   );
