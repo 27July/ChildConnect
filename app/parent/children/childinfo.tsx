@@ -17,10 +17,19 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function ChildScreen() {
   const { childId, name } = useLocalSearchParams();
   const router = useRouter();
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] =
+    useState<Location.LocationObjectCoords | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPresent, setIsPresent] = useState(false);
 
-  // ✅ Fetch Child's Location
+  // ✅ School Location for Geofencing
+  const SCHOOL_LOCATION = {
+    latitude: 1.3097285706219166, // replace with real school latitude
+    longitude: 103.76293562824027, // replace with real school longitude
+    radius: 100, // in meters
+  };
+
+  // ✅ Fetch Child's Location & Check Presence
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -36,6 +45,35 @@ export default function ChildScreen() {
       let currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation.coords);
       setLoading(false);
+
+      console.log(currentLocation); //DEBUGGING Current Location
+
+      // ✅ Calculate distance to school
+      const toRad = (value: number) => (value * Math.PI) / 180;
+
+      const calculateDistance = (coords1: any, coords2: any) => {
+        const R = 6371e3; // metres
+        const φ1 = toRad(coords1.latitude);
+        const φ2 = toRad(coords2.latitude);
+        const Δφ = toRad(coords2.latitude - coords1.latitude);
+        const Δλ = toRad(coords2.longitude - coords1.longitude);
+
+        const a =
+          Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+          Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        const distance = R * c; // in metres
+        return distance;
+      };
+
+      const distance = calculateDistance(
+        currentLocation.coords,
+        SCHOOL_LOCATION
+      );
+
+      console.log("Distance to school:", distance); //DEBUGGING Distance to school
+      setIsPresent(distance <= SCHOOL_LOCATION.radius);
     })();
   }, []);
 
@@ -43,7 +81,7 @@ export default function ChildScreen() {
     <SafeAreaView style={styles.container}>
       {/* ✅ Child Mode Toggle Button (Top Right) */}
       <TouchableOpacity
-        onPress={() => router.push("./childmode")} // ✅ Navigate to Child Mode screen
+        onPress={() => router.push("./childmode")}
         style={styles.childModeButton}
       >
         <FontAwesome5 name="user-shield" size={20} color="white" />
@@ -52,12 +90,15 @@ export default function ChildScreen() {
       {/* ✅ Profile Section */}
       <View style={styles.profileSection}>
         <Image
-          source={require("../../../assets/images/indianboy.png")} // ✅ Corrected image path
+          source={require("../../../assets/images/indianboy.png")}
           style={styles.profilePic}
         />
         <Text style={styles.childName}>{name}</Text>
         <Text style={styles.schoolName}>Experimental Primary School</Text>
         <Text style={styles.childDetails}>Class: 1E4 Grade: P1</Text>
+        <Text style={styles.presenceStatus}>
+          Status: {isPresent ? "Present" : "Not Present"}
+        </Text>
       </View>
 
       {/* ✅ Live Map */}
@@ -130,7 +171,13 @@ const styles = StyleSheet.create({
   childDetails: {
     fontSize: 14,
     color: "#444",
-    marginBottom: 20,
+    marginBottom: 10,
+  },
+  presenceStatus: {
+    fontSize: 16,
+    color: "#285E5E",
+    fontWeight: "bold",
+    marginTop: 5,
   },
   mapContainer: {
     width: "90%",
