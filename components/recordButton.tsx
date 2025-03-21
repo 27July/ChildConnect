@@ -1,8 +1,6 @@
 import React from "react";
 import { TouchableOpacity, Text } from "react-native";
-import RouteButton from "./routebutton";
-
-//
+import SmallRouteButton from "./smallroutebutton";
 
 interface RecordButtonProps {
   label: string;
@@ -12,7 +10,7 @@ interface RecordButtonProps {
 export function RecordButton({ label , destination }: RecordButtonProps) {
   return (
     <TouchableOpacity className="bg-primary-400 py-4 rounded-lg items-center mb-2">
-      <RouteButton title={label} to= {destination}/>
+      <SmallRouteButton title={label} to= {destination} className="text-grey-700"/>
     </TouchableOpacity>
   );
 }
