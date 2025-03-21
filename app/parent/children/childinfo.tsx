@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  // SafeAreaView,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { FontAwesome5 } from "@expo/vector-icons";
@@ -24,9 +25,9 @@ export default function ChildScreen() {
 
   // ✅ School Location for Geofencing
   const SCHOOL_LOCATION = {
-    latitude: 1.3097285706219166, // replace with real school latitude
-    longitude: 103.76293562824027, // replace with real school longitude
-    radius: 100, // in meters
+    latitude: 1.3462227582931519, // replace with real school latitude
+    longitude: 103.68243408203125, // replace with real school longitude
+    radius: 200, // in meters
   };
 
   // ✅ Fetch Child's Location & Check Presence

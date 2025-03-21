@@ -17,7 +17,7 @@ export default function Layout() {
 
       {/* Bottom Tab Bar - Hidden on Specific Screens */}
       {!hideTabBar && (
-        <View className="flex-row justify-between items-center bg-primary-600 py-3 px-6 rounded-t-2xl absolute bottom-0 w-full">
+        <View className="flex-row justify-between items-center bg-primary-400 py-3 px-6 rounded-t-2xl absolute bottom-0 w-full">
           <TouchableOpacity
             onPress={() => router.push("/parent/home/home")}
             className="items-center"
@@ -36,7 +36,7 @@ export default function Layout() {
 
           <TouchableOpacity
             onPress={() => router.push("/parent/chat/chatlist")}
-            className="items-center bg-primary-500 p-4 rounded-full"
+            className="items-center bg-primary-300 p-4 rounded-full"
           >
             <MessageCircle size={30} color="white" />
           </TouchableOpacity>
