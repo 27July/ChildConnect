@@ -24,7 +24,7 @@ export default function Layout() {
       {!hideTabBar && (
         <View className="flex-row justify-between items-center bg-primary-600 py-3 px-6 rounded-t-2xl absolute bottom-0 w-full">
           <TouchableOpacity
-            onPress={() => router.push("/teacher/home/home")}
+            onPress={() => router.replace("/teacher/home/home")}
             className="items-center"
           >
             <Home size={24} color="white" />
@@ -32,7 +32,7 @@ export default function Layout() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => router.push("/teacher/classes/classes")}
+            onPress={() => router.replace("/teacher/classes/classes")}
             className="items-center"
           >
             <BookOpen size={24} color="white" />
@@ -40,14 +40,14 @@ export default function Layout() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => router.push("/teacher/chat/chatlist")}
+            onPress={() => router.replace("/teacher/chat/chatlist")}
             className="items-center bg-primary-500 p-4 rounded-full"
           >
             <MessageCircle size={30} color="white" />
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => router.push("/teacher/school/school")}
+            onPress={() => router.replace("/teacher/school/school")}
             className="items-center"
           >
             <School size={24} color="white" />
@@ -55,7 +55,7 @@ export default function Layout() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => router.push("/teacher/profile/profile")}
+            onPress={() => router.replace("/teacher/profile/profile")}
             className="items-center"
           >
             <User size={24} color="white" />
