@@ -7,6 +7,7 @@ import {
   User,
   MessageCircle,
 } from "lucide-react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Layout() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function Layout() {
   const hideTabBar = segments.includes("chatpage");
 
   return (
-    <View className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background">
       {/* Page Content */}
       <Slot />
 
@@ -63,6 +64,6 @@ export default function Layout() {
           </TouchableOpacity>
         </View>
       )}
-    </View>
+    </SafeAreaView>
   );
 }

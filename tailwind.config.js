@@ -19,7 +19,7 @@ module.exports = {
           100: "#eaf4f4",
           200: "#cce3de",
           300: "#a4c3b2",
-          400: "#6b9080", //Darkest Green
+          400: "#6b9080", //Darkest color
           500: "#4e957d", // Main brand color
           600: "#3c7664",
           700: "#2b574b",
@@ -49,7 +49,7 @@ module.exports = {
         // Text & Backgrounds
         textPrimary: "#333333",
         textSecondary: "#666666",
-        background: "#f8f8f8",
+        background: "#E6F0EC",
       },
 
       fontFamily: {
