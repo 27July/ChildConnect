@@ -39,3 +39,11 @@ yarn-error.*
 app-example
 
 serviceAccountKey.json
+
+__pycache__
+
+pycache
+
+venv
+
+utils/server_ip.json

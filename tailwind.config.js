@@ -15,11 +15,11 @@ module.exports = {
       colors: {
         // Brand primary color (Green-based theme)
         primary: {
-          50:  "#f6fff8",
+          50: "#f6fff8", //Lightest Green/white
           100: "#eaf4f4",
           200: "#cce3de",
           300: "#a4c3b2",
-          400: "#6b9080",
+          400: "#6b9080", //Darkest Green
           500: "#4e957d", // Main brand color
           600: "#3c7664",
           700: "#2b574b",
@@ -29,7 +29,7 @@ module.exports = {
 
         // Secondary or accent color (if needed)
         secondary: {
-          50:  "#fef9f5",
+          50: "#fef9f5",
           100: "#fbeade",
           200: "#f7dcc7",
           300: "#f4ceb1",
