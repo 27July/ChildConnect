@@ -13,6 +13,11 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { calculateDistance } from "../../../components/calculateDistance";
+import {
+  startBackgroundLocationTracking,
+  stopBackgroundLocationTracking,
+} from "../../../components/ChildLocationTracker";
 
 export default function ChildScreen() {
   const { childId, name } = useLocalSearchParams();
@@ -22,8 +27,9 @@ export default function ChildScreen() {
     useState<Location.LocationObjectCoords | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPresent, setIsPresent] = useState(false);
+  const [isTracking, setIsTracking] = useState(false);
 
-  const mapRef = useRef<MapView | null>(null); // MapView reference for programmatic control
+  const mapRef = useRef<MapView | null>(null);
 
   const SCHOOL_LOCATION = {
     latitude: 1.3462227582931519,
@@ -37,24 +43,11 @@ export default function ChildScreen() {
   } | null>(null);
 
   useEffect(() => {
+    stopBackgroundLocationTracking(); // in case tracking was still active
+  }, []);
+
+  useEffect(() => {
     let intervalId: NodeJS.Timeout;
-
-    const toRad = (value: number) => (value * Math.PI) / 180;
-
-    const calculateDistance = (coords1: any, coords2: any) => {
-      const R = 6371e3;
-      const φ1 = toRad(coords1.latitude);
-      const φ2 = toRad(coords2.latitude);
-      const Δφ = toRad(coords2.latitude - coords1.latitude);
-      const Δλ = toRad(coords2.longitude - coords1.longitude);
-
-      const a =
-        Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-        Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
-    };
 
     const fetchChildLocationFromBackend = async () => {
       try {
@@ -86,7 +79,6 @@ export default function ChildScreen() {
       setLoading(false);
       await fetchChildLocationFromBackend();
 
-      // Start polling every 10 seconds
       intervalId = setInterval(fetchChildLocationFromBackend, 10000);
     })();
 
@@ -94,7 +86,6 @@ export default function ChildScreen() {
   }, []);
 
   useEffect(() => {
-    // Fit all markers into view when all coordinates are available
     if (mapRef.current && location && childBackendLocation) {
       mapRef.current.fitToCoordinates(
         [
@@ -152,7 +143,6 @@ export default function ChildScreen() {
               longitudeDelta: 0.01,
             }}
           >
-            {/* Child's location marker */}
             <Marker
               coordinate={childBackendLocation}
               title="Child's Location"
@@ -160,7 +150,6 @@ export default function ChildScreen() {
               pinColor="blue"
             />
 
-            {/* Your current location marker */}
             <Marker
               coordinate={{
                 latitude: location.latitude,
@@ -171,7 +160,6 @@ export default function ChildScreen() {
               pinColor="green"
             />
 
-            {/* School marker */}
             <Marker
               coordinate={{
                 latitude: SCHOOL_LOCATION.latitude,
@@ -186,6 +174,27 @@ export default function ChildScreen() {
           <Text style={styles.errorText}>Unable to fetch locations</Text>
         )}
       </View>
+
+      {/* Start tracking button */}
+      {/* {!isTracking && (
+        <TouchableOpacity
+          style={[styles.childModeButton, { top: 70 }]}
+          onPress={async () => {
+            await startBackgroundLocationTracking();
+            setIsTracking(true);
+          }}
+        >
+          <Text style={{ color: "white", fontWeight: "bold" }}>
+            Start Tracking
+          </Text>
+        </TouchableOpacity>
+      )} */}
+
+      {isTracking && (
+        <Text style={{ color: "#285E5E", marginTop: 10 }}>
+          Tracking in progress...
+        </Text>
+      )}
     </SafeAreaView>
   );
 }

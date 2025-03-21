@@ -14,8 +14,12 @@ import { useRouter } from "expo-router";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import {
+  startBackgroundLocationTracking,
+  stopBackgroundLocationTracking,
+} from "../../../components/ChildLocationTracker";
 
-const PRESET_EXIT_CODE = "1234"; // 🔑 Replace with a secure stored value
+const PRESET_EXIT_CODE = "1234";
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
 export default function ChildModeScreen() {
@@ -24,16 +28,15 @@ export default function ChildModeScreen() {
   const [homeworkList, setHomeworkList] = useState([]);
   const [isModalVisible, setModalVisible] = useState(false);
   const [exitCode, setExitCode] = useState("");
+  const [isTracking, setIsTracking] = useState(false);
 
   useEffect(() => {
-    // ✅ Disable swipe gestures
     let parent = navigation.getParent();
     while (parent) {
       parent.setOptions({ gestureEnabled: false });
       parent = parent.getParent();
     }
 
-    // ✅ Re-enable swipe gestures when leaving
     return () => {
       let parent = navigation.getParent();
       while (parent) {
@@ -43,7 +46,6 @@ export default function ChildModeScreen() {
     };
   }, [navigation]);
 
-  // ✅ Sample Homework Data
   useEffect(() => {
     setHomeworkList([
       {
@@ -62,11 +64,25 @@ export default function ChildModeScreen() {
     ]);
   }, []);
 
-  // ✅ Verify Exit Code
-  const handleExitChildMode = () => {
+  const handleExitChildMode = async () => {
     if (exitCode === PRESET_EXIT_CODE) {
+      try {
+        await stopBackgroundLocationTracking(); // force stop it
+        setIsTracking(false);
+      } catch (err) {
+        console.warn("Failed to stop background tracking:", err);
+      }
+
       setModalVisible(false);
-      router.push("./childinfo"); // ✅ Navigate back to parent screen
+
+      // Force gestures back on before navigating
+      let parent = navigation.getParent();
+      while (parent) {
+        parent.setOptions({ gestureEnabled: true });
+        parent = parent.getParent();
+      }
+
+      router.replace("./childinfo");
     } else {
       Alert.alert("Incorrect Code", "The exit code entered is incorrect.");
     }
@@ -74,14 +90,12 @@ export default function ChildModeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* ✅ Child Mode Header */}
       <Text style={styles.header}>Child Mode Enabled</Text>
       <Text style={styles.description}>
         This device is now in child mode. Below is the list of homework
         assigned.
       </Text>
 
-      {/* ✅ Homework List (Adapts to Screen Size) */}
       <FlatList
         data={homeworkList}
         keyExtractor={(item) => item.id}
@@ -98,15 +112,48 @@ export default function ChildModeScreen() {
         )}
       />
 
-      {/* ✅ Exit Child Mode Button */}
+      {/* Start Background Tracking Button */}
+      {!isTracking && (
+        <TouchableOpacity
+          style={[styles.exitButton, { backgroundColor: "#285E5E" }]}
+          onPress={async () => {
+            try {
+              console.log("Attempting to start tracking...");
+              await startBackgroundLocationTracking();
+              console.log("Tracking started successfully.");
+              setIsTracking(true);
+              Alert.alert(
+                "Tracking Started",
+                "Your location is now being tracked."
+              );
+            } catch (err) {
+              console.error("Failed to start tracking:", err);
+              Alert.alert(
+                "Error",
+                "Could not start tracking. Check permissions."
+              );
+            }
+          }}
+        >
+          <Text style={styles.exitButtonText}>I'm Leaving Home/School</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Tracking Banner */}
+      {isTracking && (
+        <View style={styles.trackingBanner}>
+          <Text style={styles.trackingText}>📍 Tracking in progress...</Text>
+        </View>
+      )}
+
+      {/* Exit Child Mode Button */}
       <TouchableOpacity
         style={styles.exitButton}
-        onPress={() => setModalVisible(true)} // Show exit code modal
+        onPress={() => setModalVisible(true)}
       >
         <Text style={styles.exitButtonText}>Exit Child Mode</Text>
       </TouchableOpacity>
 
-      {/* ✅ Exit Code Modal */}
       <Modal
         transparent={true}
         animationType="slide"
@@ -146,7 +193,6 @@ export default function ChildModeScreen() {
   );
 }
 
-// ✅ Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -251,5 +297,17 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  trackingBanner: {
+    marginTop: 10,
+    padding: 8,
+    backgroundColor: "#d0f0c0",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  trackingText: {
+    color: "#285E5E",
+    fontWeight: "600",
+    fontSize: 14,
   },
 });
