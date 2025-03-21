@@ -46,4 +46,4 @@ pycache
 
 venv
 
-utils\server_ip.json
+utils/server_ip.json
