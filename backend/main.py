@@ -50,12 +50,13 @@ async def get_ip():
 # ✅ Public route (No authentication required)
 @app.get("/")
 async def public_route():
-    return {"message": "Hello from FastAPI"}
+    return {"message": "Hello from FastAPI, your FASTAPI is working"}
 
 # ✅ Protected route (Requires Firebase authentication)
 @app.get("/profile")
 async def get_profile(user=Depends(get_current_user)):
     return {
         "message": f"Hello, {user.get('email')}",
-        "user_id": user.get('uid')
+        "user_id": user.get('uid'),
+        "email" : user.get('email')
     }
