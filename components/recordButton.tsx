@@ -12,7 +12,7 @@ export function RecordButton({ label, destination }: RecordButtonProps) {
 
   return (
     <TouchableOpacity
-      className="bg-primary-400 py-4 rounded-lg items-center mb-2"
+      className="bg-primary-300 py-4 rounded-lg items-center mb-2"
       onPress={() => router.push(destination as any)}
 
     >
