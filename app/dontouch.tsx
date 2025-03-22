@@ -20,10 +20,10 @@ export default function OnboardingScreen() {
       {/* Reusable buttons */}
       <View className="flex pb-20 px-6 pt-20">
         <RouteButton title="Get Started" to="/login" />
-        <RouteButton title="Parent" to="./parent/home/home" className="mt-4" />
+        <RouteButton title="Parent" to="/(parent)/home" className="mt-4" />
         <RouteButton
           title="Teacher"
-          to="./teacher/home/home"
+          to="./(teacher)/home"
           className="mt-4"
         />
       </View>

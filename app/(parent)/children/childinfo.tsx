@@ -15,6 +15,10 @@ import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+export const options = {
+  href: null,
+};
+
 export default function ChildScreen() {
   const { childId, name } = useLocalSearchParams();
   const router = useRouter();

@@ -18,6 +18,10 @@ import { useNavigation } from "@react-navigation/native";
 const PRESET_EXIT_CODE = "1234"; // 🔑 Replace with a secure stored value
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
+export const options = {
+  href: null,
+};
+
 export default function ChildModeScreen() {
   const router = useRouter();
   const navigation = useNavigation();
