@@ -4,8 +4,13 @@ import socket
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from services.firebase_auth import get_current_user  # ✅ Firebase authentication
+from firebase_admin import firestore
+
+db = firestore.client()
+
 
 app = FastAPI()
+
 
 # ✅ Enable CORS for Expo & Web Access
 app.add_middleware(
@@ -60,3 +65,22 @@ async def get_profile(user=Depends(get_current_user)):
         "user_id": user.get('uid'),
         "email" : user.get('email')
     }
+@app.post("/registerparent")
+def register_parent(data: dict, current_user=Depends(get_current_user)):
+    uid = current_user["uid"]
+    email = current_user["email"]
+
+    # Save to Firestore under users/uid
+    db.collection("users").document(uid).set({
+        "name": data["name"],
+        "phone": data["phone"],
+        "email": email,
+        "role": "parent",
+        "profilepic": "",
+        "children": [],
+        "address": "",
+        "workPhone": "",
+        "created": firestore.SERVER_TIMESTAMP,
+    })
+
+    return {"status": "success", "uid": uid}

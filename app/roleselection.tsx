@@ -19,10 +19,10 @@ const roleselection = () => {
 
       {/* Reusable buttons */}
       <View className="flex pb-2 px-6 pt-0">
-        <RouteButton title="I'm a Parent!" to="./dontouch" />
+        <RouteButton title="I'm a Parent!" to="./register/registerparent" />
       </View>
       <View className="flex pb-20 px-6 pt-2">
-        <RouteButton title="I'm a Teacher!" to="./dontouch" />
+        <RouteButton title="I'm a Teacher!" to="./register/registerteacher" />
       </View>
     </View>
   )
