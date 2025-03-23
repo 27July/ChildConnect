@@ -44,7 +44,11 @@ export default function LoginScreen() {
       console.log("Backend Response:", data);
       Alert.alert("Login Successful", `${data.email}`);
 
-      router.push("./(parent)/home");
+      if (data.role === "parent") {
+        router.push("/(parent)/home");
+      } else if (data.role === "teacher") {
+        router.push("/(teacher)/home");
+      }
     } catch (error: any) {
       console.error("Login Error:", error.message);
       Alert.alert("Login Failed,\n Please Try Again!");

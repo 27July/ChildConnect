@@ -60,10 +60,16 @@ async def public_route():
 # ✅ Protected route (Requires Firebase authentication)
 @app.get("/profile")
 async def get_profile(user=Depends(get_current_user)):
+    uid = user.get("uid");
+    doc_ref = db.collection("users").document(uid);
+    doc = doc_ref.get()
+    profile = doc.to_dict()
     return {
-        "message": f"Hello, {user.get('email')}",
-        "user_id": user.get('uid'),
-        "email" : user.get('email')
+        "user_id": uid,
+        "email": profile.get("email"),
+        "role": profile.get("role"),  # ✅ this is the key piece
+        "name": profile.get("name"),
+        "message": f"Hello, {profile.get('name', 'User')}"
     }
 @app.post("/registerparent")
 def register_parent(data: dict, current_user=Depends(get_current_user)):
@@ -76,6 +82,26 @@ def register_parent(data: dict, current_user=Depends(get_current_user)):
         "phone": data["phone"],
         "email": email,
         "role": "parent",
+        "profilepic": "",
+        "children": [],
+        "address": "",
+        "workPhone": "",
+        "created": firestore.SERVER_TIMESTAMP,
+    })
+
+    return {"status": "success", "uid": uid}
+
+@app.post("/registerteacher")
+def register_parent(data: dict, current_user=Depends(get_current_user)):
+    uid = current_user["uid"]
+    email = current_user["email"]
+
+    # Save to Firestore under users/uid
+    db.collection("users").document(uid).set({
+        "name": data["name"],
+        "phone": data["phone"],
+        "email": email,
+        "role": "teacher",
         "profilepic": "",
         "children": [],
         "address": "",
