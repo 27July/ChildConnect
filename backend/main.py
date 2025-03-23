@@ -5,8 +5,11 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from services.firebase_auth import get_current_user  # ✅ Firebase authentication
 from firebase_admin import firestore
+from services.schoolsapi import preload_school_data
 
 db = firestore.client()
+
+#preload_school_data()
 
 
 app = FastAPI()
