@@ -54,8 +54,8 @@ const ChildPresentProfile = () => {
 
       {/* Records Section */}
       <View className="mt-6">
-        <RecordButton label="Attendance Record" destination="/parent/profile/attendanceRecord" />
-        <RecordButton label="Documentation" destination="/parent/profile/documentation" />
+        <RecordButton label="Attendance Record" destination="/(parent)/profile/attendanceRecord" />
+        <RecordButton label="Documentation" destination="/(parent)/profile/documentation" />
       </View>
     </View>
   );

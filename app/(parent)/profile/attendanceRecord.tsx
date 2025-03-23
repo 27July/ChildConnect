@@ -1,41 +1,50 @@
 import React from 'react';
 import { View, Text, Image, SafeAreaView } from 'react-native';
 import { Calendar } from 'react-native-calendars';
+import { child } from "@/components/data/childData";
+import { attendanceData, getPresenceColor } from "@/components/data/calendarData";
+//import { generateMarkedDates } from "@/components/utils/calendarUtils"; // Import the reusable function
+
+
+// Might need to move out this function later on
+export function generateMarkedDates(
+  data: { date: string; isPresent: boolean }[],
+  getColor: (isPresent: boolean) => string
+): { [key: string]: { selected: boolean; selectedColor: string } } {
+  return data.reduce((acc, entry) => {
+    acc[entry.date] = {
+      selected: true,
+      selectedColor: getColor(entry.isPresent),
+    };
+    return acc;
+  }, {} as { [key: string]: { selected: boolean, selectedColor: string } });
+}
 
 const AttendanceScreen = () => {
+  // Generate marked dates for the calendar using the reusable function
+  const markedDates = generateMarkedDates(attendanceData, getPresenceColor);
+
   return (
-    <SafeAreaView className="flex-1 bg-white p-4">
+    <View className="flex-1 bg-primary-100 justify-center py-20">
       <Text className="text-xl font-bold text-gray-800 text-center mb-4">
         Attendance Record Calendar View
       </Text>
 
       {/* Profile Section */}
-      <View className="items-center bg-gray-100 p-4 rounded-lg shadow-md">
-        <Image
-          source={{ uri: 'https://via.placeholder.com/100' }}
-          className="w-24 h-24 rounded-full mb-2"
-        />
-        <Text className="text-lg font-semibold text-gray-900">Lex</Text>
-        <Text className="text-gray-600">Experimental Primary School</Text>
-        <Text className="text-gray-500">Class: 1E4 | Grade: P1</Text>
+      <View className="items-center bg-primary-100 p-4">
+        <Image source={child.profileImage} className="w-28 h-28 rounded-full" />
+        <Text className="text-xl font-semibold text-gray-800 mt-3">{child.name}</Text>
+        <Text className="text-lg text-gray-700">{child.school}</Text>
+        <Text className="text-sm text-gray-600"></Text>
       </View>
 
       {/* Calendar */}
       <View className="mt-6">
         <Calendar
-          markedDates={{
-            '2023-02-01': { selected: true, selectedColor: 'green' },
-            '2023-02-02': { selected: true, selectedColor: 'green' },
-            '2023-02-03': { selected: true, selectedColor: 'red' },
-          }}
-          theme={{
-            selectedDayBackgroundColor: '#4CAF50',
-            todayTextColor: '#FF5722',
-            arrowColor: 'black',
-          }}
+          markedDates={markedDates}
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
