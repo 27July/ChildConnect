@@ -86,6 +86,7 @@ def register_parent(data: dict, current_user=Depends(get_current_user)):
         "children": [],
         "address": "",
         "workPhone": "",
+        "classes": [],
         "created": firestore.SERVER_TIMESTAMP,
     })
 
@@ -106,6 +107,7 @@ def register_parent(data: dict, current_user=Depends(get_current_user)):
         "children": [],
         "address": "",
         "workPhone": "",
+        "classes": [],
         "created": firestore.SERVER_TIMESTAMP,
     })
 
