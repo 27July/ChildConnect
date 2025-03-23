@@ -139,3 +139,53 @@ def get_my_children(user=Depends(get_current_user)):
             children.append(child.to_dict() | {"id": child.id})
 
     return children
+
+@app.get("/homeinfo")
+def get_home_data(user=Depends(get_current_user)):
+    uid = user["uid"]
+
+    # Step 1: Fetch user profile
+    user_ref = db.collection("users").document(uid)
+    user_doc = user_ref.get()
+    if not user_doc.exists:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user_data = user_doc.to_dict()
+    profile_picture = user_data.get("profilepic", "")
+
+    # Step 2: Get children where user is either father or mother
+    children_ref = db.collection("children")
+    father_children = children_ref.where("fatherid", "==", uid).stream()
+    mother_children = children_ref.where("motherid", "==", uid).stream()
+
+    class_names = set()
+
+    for child in list(father_children) + list(mother_children):
+        child_data = child.to_dict()
+        class_name = child_data.get("class")
+        if class_name:
+            class_names.add(class_name)
+
+    # Step 3: Get class document IDs (actual Firestore doc IDs)
+    class_ids = set()
+    classes_ref = db.collection("class")
+
+    for name in class_names:
+        query = classes_ref.where("name", "==", name).limit(1).stream()
+        for doc in query:
+            class_ids.add(doc.id)
+
+    # Step 4: Fetch announcements for these class IDs where status == "open"
+    announcements = []
+    for class_id in class_ids:
+        query = db.collection("announcements") \
+                  .where("classid", "==", class_id) \
+                  .where("status", "==", "open") \
+                  .stream()
+        for doc in query:
+            announcements.append({**doc.to_dict(), "id": doc.id})
+
+    return {
+        "profilepic": profile_picture,
+        "announcements": announcements
+    }
