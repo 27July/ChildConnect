@@ -117,3 +117,25 @@ def register_parent(data: dict, current_user=Depends(get_current_user)):
     })
 
     return {"status": "success", "uid": uid}
+
+@app.get("/mychildren")
+def get_my_children(user=Depends(get_current_user)):
+    uid = user["uid"]
+
+    # Query 1: where fatherid == uid
+    father_query = db.collection("children").where("fatherid", "==", uid).stream()
+    # Query 2: where motherid == uid
+    mother_query = db.collection("children").where("motherid", "==", uid).stream()
+
+    # Convert results to list of dicts with document IDs
+    children = []
+
+    for child in father_query:
+        children.append(child.to_dict() | {"id": child.id})
+
+    for child in mother_query:
+        # Avoid duplicates if both fatherid and motherid are same (rare but possible)
+        if child.id not in [c["id"] for c in children]:
+            children.append(child.to_dict() | {"id": child.id})
+
+    return children
