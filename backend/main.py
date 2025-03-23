@@ -9,7 +9,7 @@ from services.schoolsapi import preload_school_data
 
 db = firestore.client()
 
-#preload_school_data()
+preload_school_data()
 
 
 app = FastAPI()

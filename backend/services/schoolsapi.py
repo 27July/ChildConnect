@@ -2,11 +2,11 @@ import requests
 from firebase_admin import firestore
 
 def preload_school_data():
-    print("📦 Preloading school data into Firestore...")
+    print("📦 Preloading all school data into Firestore (collection: schoolapi)...")
 
     db = firestore.client()
     dataset_id = "d_688b934f82c1059ed0a6993d2a829089"
-    url = "https://data.gov.sg/api/action/datastore_search?resource_id="  + dataset_id 
+    url = f"https://data.gov.sg/api/action/datastore_search?resource_id={dataset_id}&limit=1000"
 
     response = requests.get(url)
     if not response.ok:
@@ -14,10 +14,12 @@ def preload_school_data():
         return
 
     records = response.json()["result"]["records"]
-    for record in records:
-        school_name = record["school_name"]
-        db.collection("schools").document(school_name).set({
-            "name": school_name
-        }, merge=True)  # merge=True so it won’t overwrite existing fields
 
-    print(f"✅ Preloaded {len(records)} schools into Firestore.")
+    for record in records:
+        school_name = record.get("school_name", "Unnamed School")
+        # Safe Firestore document ID
+        doc_id = school_name.replace("/", "_").replace(".", "").strip()
+
+        db.collection("schoolapi").document(doc_id).set(record, merge=True)
+
+    print(f"✅ Preloaded {len(records)} full school records into Firestore collection `schoolapi`.")
