@@ -16,7 +16,8 @@ document_data = {
     "created": firestore.SERVER_TIMESTAMP,  # or datetime.utcnow()
     "classid": "9QGMIqtwt0u78iMUo5Mu",
     "childrenid": "nkyN2Lz6GMCvHKEaolyY",
-    "parentid": "",  # Add parent ID if you have it
+    "parentid": [],  # Add parent ID if you have it
+    "content": "",
 }
 
 # Add to Firestore (auto-ID document)

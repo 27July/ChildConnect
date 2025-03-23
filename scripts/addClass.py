@@ -16,7 +16,9 @@ def add_class():
         "children": [
             "nkyN2Lz6GMCvHKEaolyY",
             "wGBPxIhabPbLDYi7HSgX"
-        ]
+        ],
+        "homework" : [],
+
     }
 
     # 🔹 Optional: set a fixed class ID like the class name (e.g., "1E4")
