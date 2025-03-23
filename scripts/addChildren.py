@@ -16,7 +16,8 @@ def add_child():
         "fathername": "Bob Tan",
         "motherid": "",
         "mothername": "",
-        "name" : "Jack Tan"
+        "name" : "Jack Tan",
+        "documents" : [],
     }
 
     # Optional: Use custom doc ID
