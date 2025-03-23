@@ -10,6 +10,7 @@ db = firestore.client()
 
 def add_child():
     child_data = {
+        #Change these values
         "class": "1E4",
         "fatherid": "JaVurUsjegNoR6WbZwM8Ym9WYCA3",
         "fathername": "Bob Tan",
