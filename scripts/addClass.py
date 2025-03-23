@@ -10,14 +10,15 @@ db = firestore.client()
 def add_class():
     class_data = {
         #Change this values
-        "name": "1E1",
+        "name": "2E1",
         "schoolname": "Bukit Batok Secondary School",
-        "teacherId": "7kDZIIrxT2PUusXsnh3T2q2jRUb2",
+        "teacherId": "12345",
         "children": [
             "nkyN2Lz6GMCvHKEaolyY",
             "wGBPxIhabPbLDYi7HSgX"
         ],
         "homework" : [],
+        "subteachers": ["7kDZllrxT2PUusXsnh3T2q2jRUb2"],
 
     }
 

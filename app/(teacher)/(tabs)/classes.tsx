@@ -1,92 +1,74 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   FlatList,
   TouchableOpacity,
-  Image,
-  Dimensions,
+  Alert,
+  SafeAreaView,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { FontAwesome5 } from "@expo/vector-icons";
+import { auth } from "@/firebaseConfig";
+import { ip } from "@/utils/server_ip.json";
 
-// Import Profile Image
-
-// Get screen width dynamically
-const screenWidth = Dimensions.get("window").width;
-
-const classes = [
-  {
-    id: "1",
-    name: "1E4",
-    subject: "Science",
-    teacher: "Form Teacher",
-    color: "#6C9BCF",
-  },
-  {
-    id: "2",
-    name: "2K2",
-    subject: "Science",
-    teacher: "Form Teacher",
-    color: "#F7A7A6",
-  },
-  {
-    id: "3",
-    name: "2K1",
-    subject: "Science",
-    teacher: "Teacher",
-    color: "#FAD02E",
-  },
-];
-
-const MyClasses = () => {
+export default function ClassesScreen() {
   const router = useRouter();
+  const [classes, setClasses] = useState<any[]>([]);
+  const apiURL = `http://${ip}:8000`;
+
+  useEffect(() => {
+    const fetchClasses = async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        Alert.alert("Error", "User not logged in.");
+        return;
+      }
+
+      const token = await user.getIdToken();
+
+      try {
+        const response = await fetch(`${apiURL}/myclasses`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch classes");
+
+        const data = await response.json();
+        setClasses(data);
+      } catch (error) {
+        console.error("Error fetching classes:", error);
+        Alert.alert("Error", "Failed to load classes.");
+      }
+    };
+
+    fetchClasses();
+  }, []);
 
   return (
-    <View className="flex-1 bg-[#E6F0EE] px-5 items-center">
-      <Image
-        // source={profileImage}
-        className="w-15 h-15 rounded-full mt-20 mb-2"
-      />
-      <View className="bg-[#C6E3DE] py-3 px-5 rounded-lg mb-5">
-        <Text className="text-base font-bold text-center">
-          Experimental Primary School
+    <SafeAreaView className="flex-1 bg-primary-50">
+      <View className="p-5">
+        <Text className="text-2xl font-bold text-primary-400 mb-4">
+          My Classes
         </Text>
+        <FlatList
+          data={classes}
+          keyExtractor={(item) => item.id}
+          bounces={false}
+          renderItem={({ item }) => (
+            <TouchableOpacity className="bg-white p-4 rounded-2xl mb-3 shadow">
+              <Text className="text-lg font-bold text-primary-400">
+                {item.name}
+              </Text>
+              <Text className="text-base text-primary-300">
+                {item.role}
+              </Text>
+            </TouchableOpacity>
+          )}
+        />
       </View>
-      <Text className="text-xl font-bold mb-2 text-center">Classes</Text>
-      <FlatList
-        data={classes}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingTop: 10, paddingBottom: 20 }}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            className="flex-row items-center bg-white py-5 px-5 rounded-lg mb-3 shadow-card"
-            style={{ width: screenWidth * 0.9 }}
-            onPress={() => router.push(`./classdetails`)}
-          >
-            <View
-              className={`w-11 h-11 rounded-full justify-center items-center mr-4`}
-              style={{ backgroundColor: item.color }}
-            >
-              <FontAwesome5 name="book" size={18} color="#fff" />
-            </View>
-            <View className="flex-1 justify-center">
-              <Text className="text-lg font-bold">{item.name}</Text>
-              <Text className="text-sm text-[#6C9BCF] mt-1">
-                {item.subject}
-              </Text>
-            </View>
-            <View className="justify-center items-end">
-              <Text className="text-sm text-gray-600 mb-1">{item.teacher}</Text>
-              <Text className="text-sm text-[#285E5E] font-bold">
-                View Details
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
-      />
-    </View>
+    </SafeAreaView>
   );
-};
-
-export default MyClasses;
+}
