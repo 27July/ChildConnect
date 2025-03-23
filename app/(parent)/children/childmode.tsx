@@ -22,6 +22,10 @@ import {
 const PRESET_EXIT_CODE = "1234";
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
+export const options = {
+  href: null,
+};
+
 export default function ChildModeScreen() {
   const router = useRouter();
   const navigation = useNavigation();

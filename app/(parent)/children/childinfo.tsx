@@ -19,6 +19,10 @@ import {
   stopBackgroundLocationTracking,
 } from "../../../components/ChildLocationTracker";
 
+export const options = {
+  href: null,
+};
+
 export default function ChildScreen() {
   const { childId, name } = useLocalSearchParams();
   const router = useRouter();

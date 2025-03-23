@@ -8,6 +8,11 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 
+export const options = {
+  href: null,
+};
+
+
 export default function ChildrenScreen() {
   const router = useRouter();
 

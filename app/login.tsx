@@ -42,12 +42,12 @@ export default function LoginScreen() {
 
       const data = await response.json();
       console.log("Backend Response:", data);
-      Alert.alert("Login Successful", `Welcome ${data.email}`);
+      Alert.alert("Login Successful", `${data.email}`);
 
-      router.push("/parent/home/home");
+      router.push("./(parent)/home");
     } catch (error: any) {
       console.error("Login Error:", error.message);
-      Alert.alert("Login Failed", error.message);
+      Alert.alert("Login Failed,\n Please Try Again!");
     }
   };
 
@@ -77,8 +77,8 @@ export default function LoginScreen() {
         onChangeText={setPassword}
       />
 
-      <View className="mb-6">
-        <SmallRouteButton title="Forgot Password" to="/forget" />
+      <View className="mb-6 pt-5">
+        <SmallRouteButton title="Forgot Password?" to="/forget" />
       </View>
 
       <View className="mb-4 pt-20">
@@ -87,7 +87,7 @@ export default function LoginScreen() {
 
       <View className="flex-row justify-center mt-4">
         <Text className="text-gray-500 mr-1">Don’t have an account?</Text>
-        <SmallRouteButton title="Register" to="/register" />
+        <SmallRouteButton title="Register Here" to="/roleselection" />
       </View>
     </View>
   );

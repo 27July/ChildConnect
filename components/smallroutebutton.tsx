@@ -13,7 +13,7 @@ export default function SmallRouteButton({ title, to }: SmallRouteButtonProps) {
 
   return (
     <TouchableOpacity onPress={() => router.push(to)}>
-      <Text className="text-white font-bold">{title}</Text>
+      <Text className="text-primary-400 font-bold">{title}</Text>
     </TouchableOpacity>
   );
 }
