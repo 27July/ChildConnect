@@ -55,6 +55,7 @@ useEffect(() => {
         <FlatList
           data={children}
           keyExtractor={(item) => item.id}
+          bounces = {false}
           renderItem={({ item }) => (
             <TouchableOpacity className="bg-white p-4 rounded-2xl mb-3 shadow">
               <Text className="text-lg font-bold text-primary-400">{item.name}</Text>

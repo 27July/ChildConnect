@@ -88,6 +88,7 @@ export default function HomeScreen() {
           <FlatList
             data={announcements}
             keyExtractor={(item) => item.id}
+            bounces = {false}
             renderItem={({ item }) => (
               <View className="bg-white rounded-xl p-4 mb-3 shadow">
                 <Text className="text-lg font-bold text-primary-400">
