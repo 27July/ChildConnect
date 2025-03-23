@@ -12,7 +12,6 @@ export const options = {
   href: null,
 };
 
-
 export default function ChildrenScreen() {
   const router = useRouter();
 
@@ -31,7 +30,7 @@ export default function ChildrenScreen() {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.childCard}
-            onPress={() => router.push(`./childinfo`)} // ✅ Navigates to sample child screen
+            onPress={() => router.push(`../children/childinfo`)} // ✅ Navigates to sample child screen
           >
             <Text style={styles.childName}>{item.name}</Text>
             <Text style={styles.childAge}>{item.age} years old</Text>

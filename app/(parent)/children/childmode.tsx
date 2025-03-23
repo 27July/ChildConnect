@@ -10,21 +10,16 @@ import {
   Modal,
   Dimensions,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useNavigation } from "expo-router";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
 import {
-  startBackgroundLocationTracking,
-  stopBackgroundLocationTracking,
+  startForegroundTracking,
+  stopForegroundTracking,
 } from "../../../components/ChildLocationTracker";
 
 const PRESET_EXIT_CODE = "1234";
 const SCREEN_WIDTH = Dimensions.get("window").width;
-
-export const options = {
-  href: null,
-};
 
 export default function ChildModeScreen() {
   const router = useRouter();
@@ -33,7 +28,12 @@ export default function ChildModeScreen() {
   const [isModalVisible, setModalVisible] = useState(false);
   const [exitCode, setExitCode] = useState("");
   const [isTracking, setIsTracking] = useState(false);
-
+  //Disable Gestures
+  useEffect(() => {
+    navigation.setOptions({
+      gestureEnabled: false, // disables swipe to go back
+    });
+  }, []);
   useEffect(() => {
     let parent = navigation.getParent();
     while (parent) {
@@ -49,6 +49,19 @@ export default function ChildModeScreen() {
       }
     };
   }, [navigation]);
+
+  // REMOTE CONTROLLED TRACKING FLAG — Can be toggled by parent (e.g. via Appwrite)
+  // const shouldStartTracking = false;
+
+  // useEffect(() => {
+  //   if (shouldStartTracking && !isTracking) {
+  //     startForegroundTracking((coords) => {
+  //       console.log("Remote-triggered tracking:", coords);
+  //       // TODO: Send to backend
+  //     });
+  //     setIsTracking(true);
+  //   }
+  // }, [shouldStartTracking]);
 
   useEffect(() => {
     setHomeworkList([
@@ -71,10 +84,10 @@ export default function ChildModeScreen() {
   const handleExitChildMode = async () => {
     if (exitCode === PRESET_EXIT_CODE) {
       try {
-        await stopBackgroundLocationTracking(); // force stop it
+        await stopForegroundTracking(); // force stop it
         setIsTracking(false);
       } catch (err) {
-        console.warn("Failed to stop background tracking:", err);
+        console.warn("Failed to tracking:", err);
       }
 
       setModalVisible(false);
@@ -116,22 +129,24 @@ export default function ChildModeScreen() {
         )}
       />
 
-      {/* Start Background Tracking Button */}
+      {/* Start Tracking Button (I'm leaving)*/}
       {!isTracking && (
         <TouchableOpacity
           style={[styles.exitButton, { backgroundColor: "#285E5E" }]}
           onPress={async () => {
             try {
-              console.log("Attempting to start tracking...");
-              await startBackgroundLocationTracking();
-              console.log("Tracking started successfully.");
+              console.log("Attempting to start foreground tracking...");
+              await startForegroundTracking((coords) => {
+                console.log("Tracked Location:", coords);
+                // TODO: Send this to Appwrite backend here
+              });
               setIsTracking(true);
               Alert.alert(
                 "Tracking Started",
                 "Your location is now being tracked."
               );
             } catch (err) {
-              console.error("Failed to start tracking:", err);
+              console.error("Failed to start foreground tracking:", err);
               Alert.alert(
                 "Error",
                 "Could not start tracking. Check permissions."

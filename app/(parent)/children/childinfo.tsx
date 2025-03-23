@@ -15,19 +15,21 @@ import * as Location from "expo-location";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { calculateDistance } from "../../../components/calculateDistance";
 import {
-  startBackgroundLocationTracking,
-  stopBackgroundLocationTracking,
+  startForegroundTracking,
+  stopForegroundTracking,
 } from "../../../components/ChildLocationTracker";
-
-export const options = {
-  href: null,
-};
 
 export default function ChildScreen() {
   const { childId, name } = useLocalSearchParams();
   const router = useRouter();
 
   const [location, setLocation] =
+    useState<Location.LocationObjectCoords | null>(null);
+  const [childBackendLocation, setChildBackendLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [childLocation, setChildLocation] =
     useState<Location.LocationObjectCoords | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPresent, setIsPresent] = useState(false);
@@ -40,15 +42,6 @@ export default function ChildScreen() {
     longitude: 103.68243408203125,
     radius: 200,
   };
-
-  const [childBackendLocation, setChildBackendLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
-
-  useEffect(() => {
-    stopBackgroundLocationTracking(); // in case tracking was still active
-  }, []);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
@@ -113,26 +106,64 @@ export default function ChildScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <TouchableOpacity
-        onPress={() => router.push("./childmode")}
-        style={styles.childModeButton}
-      >
-        <FontAwesome5 name="user-shield" size={20} color="white" />
-      </TouchableOpacity>
-
-      <View style={styles.profileSection}>
-        <Image
-          source={require("../../../assets/images/indianboy.png")}
-          style={styles.profilePic}
-        />
-        <Text style={styles.childName}>{name}</Text>
-        <Text style={styles.schoolName}>Experimental Primary School</Text>
-        <Text style={styles.childDetails}>Class: 1E4 Grade: P1</Text>
-        <Text style={[styles.presenceStatus, !isPresent && styles.notPresent]}>
-          Status: {isPresent ? "In School" : "Not in School"}
-        </Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.profileInfo}>
+          <Image
+            source={require("../../../assets/images/indianboy.png")}
+            style={styles.profilePic}
+          />
+          <View>
+            <Text style={styles.childName}>{name}</Text>
+            <Text style={styles.schoolText}>Experimental Primary School</Text>
+            <Text style={styles.classText}>Class: 1E4 Grade: P1</Text>
+          </View>
+        </View>
+        <TouchableOpacity
+          onPress={() => router.push("./childmode")}
+          style={styles.shieldButton}
+        >
+          <FontAwesome5 name="user-shield" size={18} color="white" />
+        </TouchableOpacity>
       </View>
 
+      {/* Toggle Tracking Button */}
+      <TouchableOpacity
+        style={[
+          styles.trackingButton,
+          { backgroundColor: isTracking ? "#d9534f" : "#6b9080" },
+        ]}
+        onPress={async () => {
+          try {
+            if (!isTracking) {
+              await startForegroundTracking((coords) => {
+                setChildLocation(coords);
+                console.log("Child's device location:", coords);
+              });
+            } else {
+              await stopForegroundTracking();
+            }
+            setIsTracking(!isTracking);
+          } catch (err) {
+            console.error("Tracking error:", err);
+            Alert.alert(
+              "Tracking Error",
+              "Failed to toggle location tracking."
+            );
+          }
+        }}
+      >
+        <Text style={styles.trackingButtonText}>
+          {isTracking ? "Stop Tracking" : "Activate Tracking"}
+        </Text>
+      </TouchableOpacity>
+
+      {/* Status Text */}
+      <Text style={[styles.statusText, !isPresent && styles.notPresent]}>
+        Status: {isPresent ? "In School" : "Not in School"}
+      </Text>
+
+      {/* Map View */}
       <View style={styles.mapContainer}>
         {loading ? (
           <ActivityIndicator size="large" color="#285E5E" />
@@ -153,52 +184,31 @@ export default function ChildScreen() {
               description="Live tracking of your child"
               pinColor="blue"
             />
-
             <Marker
-              coordinate={{
-                latitude: location.latitude,
-                longitude: location.longitude,
-              }}
+              coordinate={location}
               title="Your Location"
               description="This device"
               pinColor="green"
             />
-
             <Marker
-              coordinate={{
-                latitude: SCHOOL_LOCATION.latitude,
-                longitude: SCHOOL_LOCATION.longitude,
-              }}
+              coordinate={SCHOOL_LOCATION}
               title="School"
               description="School Location"
               pinColor="orange"
             />
+            {childLocation && (
+              <Marker
+                coordinate={childLocation}
+                title="Child Device"
+                description="Real-time from this device"
+                pinColor="purple"
+              />
+            )}
           </MapView>
         ) : (
           <Text style={styles.errorText}>Unable to fetch locations</Text>
         )}
       </View>
-
-      {/* Start tracking button */}
-      {/* {!isTracking && (
-        <TouchableOpacity
-          style={[styles.childModeButton, { top: 70 }]}
-          onPress={async () => {
-            await startBackgroundLocationTracking();
-            setIsTracking(true);
-          }}
-        >
-          <Text style={{ color: "white", fontWeight: "bold" }}>
-            Start Tracking
-          </Text>
-        </TouchableOpacity>
-      )} */}
-
-      {isTracking && (
-        <Text style={{ color: "#285E5E", marginTop: 10 }}>
-          Tracking in progress...
-        </Text>
-      )}
     </SafeAreaView>
   );
 }
@@ -207,57 +217,71 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#E6F0EE",
-    alignItems: "center",
+    paddingHorizontal: 20,
     paddingTop: 20,
   },
-  childModeButton: {
-    position: "absolute",
-    top: 20,
-    right: 20,
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  profileInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  profilePic: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 12,
+  },
+  childName: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#285E5E",
+  },
+  schoolText: {
+    fontSize: 14,
+    color: "#444",
+  },
+  classText: {
+    fontSize: 13,
+    color: "#666",
+  },
+  shieldButton: {
     backgroundColor: "#6b9080",
     padding: 10,
     borderRadius: 20,
   },
-  profileSection: {
-    alignItems: "center",
-    marginBottom: 20,
+  trackingButton: {
+    alignSelf: "center",
+    marginVertical: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 25,
+    borderRadius: 25,
   },
-  profilePic: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 10,
-  },
-  childName: {
-    fontSize: 22,
+  trackingButtonText: {
+    color: "white",
     fontWeight: "bold",
-    color: "#285E5E",
-  },
-  schoolName: {
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 5,
-  },
-  childDetails: {
     fontSize: 14,
-    color: "#444",
-    marginBottom: 10,
   },
-  presenceStatus: {
+  statusText: {
     fontSize: 16,
     fontWeight: "bold",
-    marginTop: 5,
+    textAlign: "center",
     color: "#285E5E",
   },
   notPresent: {
     color: "#d9534f",
   },
   mapContainer: {
-    width: "90%",
-    height: 250,
-    borderRadius: 10,
+    marginTop: 15,
+    width: "100%",
+    height: 300,
+    borderRadius: 12,
     overflow: "hidden",
-    backgroundColor: "#ddd",
+    backgroundColor: "#ccc",
   },
   map: {
     width: "100%",
