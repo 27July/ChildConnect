@@ -17,7 +17,8 @@ def add_announcement():
         "classid": "9QGMIqtwt0u78iMUo5Mu",  # Class document ID
         "teachername": "Jane Tan",
         "teacheruserid": "7kDZIIrxT2PUusXsnh3T2q2jRUb2",
-        "created": firestore.SERVER_TIMESTAMP  # Automatically capture timestamp
+        "created": firestore.SERVER_TIMESTAMP ,  # Automatically capture timestamp
+        "status" : "open"
     }
 
     # 🔹 Add to the "announcements" collection
