@@ -8,7 +8,8 @@ import {
   StyleSheet,
 } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { FilePlus2, FileUser } from "lucide-react-native";
 
 // ✅ Sample Student Data (Replace with Firestore/Backend later)
 const students = [
@@ -93,6 +94,7 @@ const students = [
 
 const ClassDetails = () => {
   const { classId = "1E4" } = useLocalSearchParams(); // ✅ Dynamic class name from router param
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [dateString, setDateString] = useState("");
 
@@ -131,8 +133,15 @@ const ClassDetails = () => {
           <Text style={styles.classSubject}>Science</Text>
         </View>
         <View style={styles.classActions}>
-          <Text style={styles.assignText}>Assign Homework</Text>
-          <Text style={styles.releaseText}>Release Form</Text>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => router.push(`./addHomework`)}
+          >
+            <FilePlus2 color="#fff" size={30} />
+          </TouchableOpacity>
+          {/* <TouchableOpacity style={styles.actionButton}>
+            <FileUser color="#fff" size={30} />
+          </TouchableOpacity> */}
         </View>
       </View>
 
@@ -165,7 +174,10 @@ const ClassDetails = () => {
                 {" "}
                 {item.attendance}{" "}
               </Text>
-              <TouchableOpacity style={styles.manageButton}>
+              <TouchableOpacity
+                style={styles.manageButton}
+                onPress={() => router.push(`./managestudent`)}
+              >
                 <Text style={styles.manageText}>Manage</Text>
               </TouchableOpacity>
             </View>
@@ -220,6 +232,26 @@ const styles = StyleSheet.create({
   classTextContainer: {
     flex: 1,
   },
+  className: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1E3765",
+  },
+  classSubject: {
+    fontSize: 14,
+    color: "#666",
+  },
+  classActions: {
+    flexDirection: "row",
+  },
+  actionButton: {
+    backgroundColor: "#285E5E",
+    padding: 10,
+    borderRadius: 10,
+    marginLeft: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   searchBar: {
     backgroundColor: "#fff",
     padding: 10,
@@ -251,6 +283,10 @@ const styles = StyleSheet.create({
   },
   studentIcon: {
     marginRight: 10,
+  },
+  studentName: {
+    fontSize: 16,
+    color: "#1E3765",
   },
   attendanceStatus: {
     fontSize: 14,

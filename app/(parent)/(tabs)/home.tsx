@@ -59,19 +59,18 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-primary-50">
-          <View className="p-5">
-            {/* 🔹 Profile Image */}
-            <View className="items-center mb-4">
-      {profilePic ? (
-        <Image
-          source={{ uri: profilePic }}
-          className="w-20 h-20 rounded-full mb-2 bg-gray-200"
-        />
-      ) : (
-        <ProfilePic width={80} height={80} />
-      )}
-    </View>
-
+      <View className="p-5">
+        {/* 🔹 Profile Image */}
+        <View className="items-center mb-4">
+          {profilePic ? (
+            <Image
+              source={{ uri: profilePic }}
+              className="w-20 h-20 rounded-full mb-2 bg-gray-200"
+            />
+          ) : (
+            <ProfilePic width={80} height={80} />
+          )}
+        </View>
 
         <Text className="text-xl font-bold text-primary-400 mb-3 text-center">
           Welcome Back!
@@ -88,9 +87,9 @@ export default function HomeScreen() {
           <FlatList
             data={announcements}
             keyExtractor={(item) => item.id}
-            bounces = {false}
+            bounces={false}
             renderItem={({ item }) => (
-              <View className="bg-white rounded-xl p-4 mb-3 shadow">
+              <View className="bg-white rounded-xl p-4 mb-3 shadow-sm">
                 <Text className="text-lg font-bold text-primary-400">
                   {item.name}
                 </Text>
