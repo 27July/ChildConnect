@@ -18,6 +18,7 @@ def add_child():
         "mothername": "",
         "name" : "Jack Tan",
         "documents" : [],
+        "profilepic": "",
     }
 
     # Optional: Use custom doc ID
