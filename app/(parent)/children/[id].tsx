@@ -11,12 +11,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { auth } from "@/firebaseConfig";
 import { ip } from "@/utils/server_ip.json";
 import ProfilePic from "../../../assets/images/profilepic.svg";
+import { useRouter } from "expo-router";
+
+
 
 export default function ChildDetailScreen() {
   const { id } = useLocalSearchParams();
   const [child, setChild] = useState<any>(null);
   const [teachers, setTeachers] = useState<any[]>([]);
   const apiURL = `http://${ip}:8000`;
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -132,11 +136,16 @@ export default function ChildDetailScreen() {
         ))}
 
         {/* 🔹 Buttons */}
-        <TouchableOpacity className="bg-[#C6E3DE] py-4 rounded-full mb-3">
-          <Text className="text-center font-bold text-[#2A2E43]">
+        <TouchableOpacity
+        className="bg-[#C6E3DE] py-4 rounded-full mb-3"
+        onPress={() => router.push({ pathname: "../../profile/attendance", params: { id } })}
+        >
+        <Text className="text-center font-bold text-[#2A2E43]">
             Attendance Records
-          </Text>
+        </Text>
         </TouchableOpacity>
+
+
 
         <TouchableOpacity className="bg-[#C6E3DE] py-4 rounded-full">
           <Text className="text-center font-bold text-[#2A2E43]">

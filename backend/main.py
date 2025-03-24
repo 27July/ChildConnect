@@ -243,3 +243,41 @@ def get_user_by_id(user_id: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="User not found")
 
     return doc.to_dict() | {"id": user_id}
+
+# ✅ BACKEND: attendance route
+@app.get("/attendance-records/{child_id}")
+def get_attendance_by_child(child_id: str, user=Depends(get_current_user)):
+    attendance_ref = db.collection("attendance").stream()
+    result = {}
+
+    for doc in attendance_ref:
+        doc_id = doc.id  # e.g. "25032025"
+        data = doc.to_dict()
+        result[doc_id] = child_id in data.get("children", [])
+
+    return result
+
+@app.get("/attendance/{date}")
+def get_attendance_by_date(date: str, user=Depends(get_current_user)):
+    doc = db.collection("attendance").document(date).get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="No attendance record for that date")
+
+    data = doc.to_dict()
+    children = data.get("children", [])
+    images = data.get("childrenimage", [])
+
+    # Ensure images list is same length as children (fallback to "null")
+    if len(images) < len(children):
+        images += ["null"] * (len(children) - len(images))
+
+    # Return child attendance entries with presence info
+    return [
+        {
+            "childid": child_id,
+            "image": img_url,
+            "present": True  # ✅ all children listed are present
+        }
+        for child_id, img_url in zip(children, images)
+    ]
+
