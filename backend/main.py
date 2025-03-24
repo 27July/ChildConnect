@@ -140,7 +140,7 @@ def get_my_children(user=Depends(get_current_user)):
 
     return children
 
-@app.get("/homeinfo")
+@app.get("/homeparentinfo")
 def get_home_data(user=Depends(get_current_user)):
     uid = user["uid"]
 
@@ -220,3 +220,4 @@ def get_my_classes(user=Depends(get_current_user)):
 
     print(f"📦 Total classes returned: {len(result)}")
     return result
+
