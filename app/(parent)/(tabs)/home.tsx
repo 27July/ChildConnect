@@ -39,7 +39,7 @@ export default function HomeScreen() {
         setProfilePic(profileData.profilepic || null);
 
         // 🔹 Step 2: Get announcements for this user's children
-        const annRes = await fetch(`${apiURL}/homeinfo`, {
+        const annRes = await fetch(`${apiURL}/homeparentinfo`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
