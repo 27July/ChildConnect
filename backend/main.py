@@ -221,3 +221,17 @@ def get_my_classes(user=Depends(get_current_user)):
     print(f"📦 Total classes returned: {len(result)}")
     return result
 
+@app.get("/child/{child_id}")
+def get_child_by_id(child_id: str, user=Depends(get_current_user)):
+    doc = db.collection("children").document(child_id).get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Child not found")
+    return doc.to_dict() | {"id": doc.id}
+
+@app.get("/users/{user_id}")
+def get_user_by_id(user_id: str, user=Depends(get_current_user)):
+    doc = db.collection("users").document(user_id).get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return doc.to_dict() | {"id": user_id}
