@@ -6,7 +6,7 @@ export default function ParentTabLayout() {
   return (
     <SafeAreaProvider>
       <SafeAreaView
-        style={{ flex: 1, backgroundColor: "#E6F0EE" }} // bg-primary-400
+        style={{ flex: 1, backgroundColor: "#f6fff8" }} // bg-primary-400
         edges={["top"]}
       >
         <Tabs

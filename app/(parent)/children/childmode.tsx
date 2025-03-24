@@ -28,12 +28,14 @@ export default function ChildModeScreen() {
   const [isModalVisible, setModalVisible] = useState(false);
   const [exitCode, setExitCode] = useState("");
   const [isTracking, setIsTracking] = useState(false);
+
   //Disable Gestures
   useEffect(() => {
     navigation.setOptions({
       gestureEnabled: false, // disables swipe to go back
     });
   }, []);
+
   useEffect(() => {
     let parent = navigation.getParent();
     while (parent) {

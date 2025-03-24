@@ -34,7 +34,7 @@ const ChatPage = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
@@ -78,7 +78,7 @@ const ChatPage = () => {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     paddingTop: 40,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#fff",
     marginLeft: 15,
@@ -132,11 +132,14 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: "#ddd",
     width: "100%",
+    paddingBottom: 10,
   },
   textInput: {
     flex: 1,
     fontSize: 16,
     padding: 10,
+    paddingBottom: 12,
+    alignSelf: "flex-start",
   },
   sendButton: {
     backgroundColor: "#285E5E",

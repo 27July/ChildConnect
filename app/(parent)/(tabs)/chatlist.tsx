@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import { FontAwesome5 } from "@expo/vector-icons";
+import { FontAwesome5, Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 // ✅ Sample Chat Data
@@ -48,25 +48,29 @@ const ChatsList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
-  // ✅ Filter chats based on search query
   const filteredChats = chats.filter((chat) =>
     chat.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <View style={styles.container}>
-      {/* ✅ Page Title */}
       <Text style={styles.headerTitle}>Chats</Text>
 
-      {/* ✅ Search Bar */}
-      <TextInput
-        style={styles.searchBar}
-        placeholder="Search for a chat..."
-        placeholderTextColor="#8E8E8E"
-        onChangeText={(text) => setSearchQuery(text)}
-      />
+      <View style={styles.searchContainer}>
+        <Feather
+          name="search"
+          size={16}
+          color="#8E8E8E"
+          style={styles.searchIcon}
+        />
+        <TextInput
+          style={styles.searchBar}
+          placeholder="Search for a chat..."
+          placeholderTextColor="#8E8E8E"
+          onChangeText={(text) => setSearchQuery(text)}
+        />
+      </View>
 
-      {/* ✅ Chat List */}
       <FlatList
         data={filteredChats}
         keyExtractor={(item) => item.id}
@@ -74,20 +78,17 @@ const ChatsList = () => {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.chatItem}
-            onPress={() => router.push("./chatpage")} // ✅ Navigate to ChatPage
+            onPress={() => router.push("../chat/chatpage")}
           >
-            {/* ✅ Chat Icon */}
             <View style={styles.chatIcon}>
               <FontAwesome5 name="comments" size={20} color="#fff" />
             </View>
 
-            {/* ✅ Chat Info */}
             <View style={styles.chatInfo}>
               <Text style={styles.chatName}>{item.name}</Text>
               <Text style={styles.lastMessage}>{item.lastMessage}</Text>
             </View>
 
-            {/* ✅ Chat Timestamp */}
             <Text style={styles.timestamp}>{item.time}</Text>
           </TouchableOpacity>
         )}
@@ -96,11 +97,10 @@ const ChatsList = () => {
   );
 };
 
-// ✅ Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#E6F0EE",
+    backgroundColor: "#f6fff8",
     paddingHorizontal: 20,
     paddingTop: 20,
   },
@@ -109,14 +109,31 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#1E3765",
     marginBottom: 10,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  searchIcon: {
+    marginRight: 6,
   },
   searchBar: {
-    backgroundColor: "#fff",
-    padding: 10,
-    borderRadius: 10,
+    flex: 1,
+    paddingVertical: 10,
     fontSize: 14,
     color: "#333",
-    marginBottom: 10,
   },
   chatList: {
     paddingBottom: 20,
@@ -125,15 +142,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 15,
-    borderRadius: 10,
-    marginBottom: 8,
+    borderRadius: 12,
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 1,
+    elevation: 1,
   },
   chatIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: "#6C9BCF",
     justifyContent: "center",
     alignItems: "center",
@@ -144,15 +166,16 @@ const styles = StyleSheet.create({
   },
   chatName: {
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "600",
     color: "#1E3765",
+    marginBottom: 2,
   },
   lastMessage: {
-    fontSize: 12,
-    color: "#666",
+    fontSize: 13,
+    color: "#555",
   },
   timestamp: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#999",
   },
 });

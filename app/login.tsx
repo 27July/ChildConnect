@@ -24,7 +24,11 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
       const token: string = await user.getIdToken();
 
@@ -45,9 +49,9 @@ export default function LoginScreen() {
       Alert.alert("Login Successful", `${data.name}`);
 
       if (data.role === "parent") {
-        router.push("./(parent)/home");
+        router.replace("./(parent)/home");
       } else if (data.role === "teacher") {
-        router.push("./(teacher)/home");
+        router.replace("./(teacher)/home");
       }
     } catch (error: any) {
       console.error("Login Error:", error.message);
@@ -58,7 +62,9 @@ export default function LoginScreen() {
   return (
     <View className="flex-1 bg-primary-50 px-5 pt-40">
       <View className="items-center mb-6">
-        <Text className="text-2xl font-bold text-primary-400 mb-2">Welcome Back</Text>
+        <Text className="text-2xl font-bold text-primary-400 mb-2">
+          Welcome Back
+        </Text>
         <LoginImg width={250} height={250} className="mb-6" />
       </View>
 
