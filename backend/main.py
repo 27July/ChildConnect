@@ -228,6 +228,14 @@ def get_child_by_id(child_id: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="Child not found")
     return doc.to_dict() | {"id": doc.id}
 
+@app.get("/classbyname/{classname}")
+def get_class_by_name(classname: str, user=Depends(get_current_user)):
+    class_ref = db.collection("class").where("name", "==", classname).limit(1).stream()
+    for doc in class_ref:
+        return doc.to_dict()
+    raise HTTPException(status_code=404, detail="Class not found")
+
+
 @app.get("/users/{user_id}")
 def get_user_by_id(user_id: str, user=Depends(get_current_user)):
     doc = db.collection("users").document(user_id).get()

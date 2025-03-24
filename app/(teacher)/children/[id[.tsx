@@ -10,61 +10,55 @@ import { useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { auth } from "@/firebaseConfig";
 import { ip } from "@/utils/server_ip.json";
-import ProfilePic from "../../../assets/images/profilepic.svg";
+import ProfilePic from "../../../assets/images/profilepic.svg"; // ✅ Adjusted path if needed
 
 export default function ChildDetailScreen() {
   const { id } = useLocalSearchParams();
   const [child, setChild] = useState<any>(null);
-  const [teachers, setTeachers] = useState<any[]>([]);
+  const [father, setFather] = useState<any>(null);
+  const [mother, setMother] = useState<any>(null);
   const apiURL = `http://${ip}:8000`;
 
   useEffect(() => {
     const fetchData = async () => {
       const user = auth.currentUser;
       if (!user) return;
+
       const token = await user.getIdToken();
 
       try {
-        // 🔹 Get child
+        // 🔹 Get child data
         const childRes = await fetch(`${apiURL}/child/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const childData = await childRes.json();
         setChild(childData);
 
-        // 🔹 Get class by class name
-        const classRes = await fetch(
-          `${apiURL}/classbyname/${childData.class}`,
-          {
+        // 🔹 Get parents
+        const [fatherRes, motherRes] = await Promise.all([
+          fetch(`${apiURL}/users/${childData.fatherid}`, {
             headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${apiURL}/users/${childData.motherid}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        if (fatherRes.ok) {
+            const userData = await fatherRes.json();
+            const { name, profilepic, role } = userData;
+            setFather({ name, profilepic, role });
           }
-        );
-        const classData = await classRes.json();
+          
+        if (motherRes.ok) {
+            const userData = await motherRes.json();
+            const { name, profilepic, role } = userData;
+            setMother({ name, profilepic, role });
+          }
+          
 
-        const teacherEntries = [
-          { id: classData.teacherId, role: "Form Teacher" },
-          ...(classData.subteachers || []).map((id: string) => ({
-            id,
-            role: "Teacher",
-          })),
-        ];
-
-        const teacherResults = await Promise.all(
-          teacherEntries.map(async ({ id, role }) => {
-            const res = await fetch(`${apiURL}/users/${id}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            if (res.ok) {
-              const { name, profilepic } = await res.json();
-              return { name, profilepic, role };
-            }
-            return null;
-          })
-        );
-
-        setTeachers(teacherResults.filter((t) => t !== null));
       } catch (err) {
-        console.error("Error fetching detail:", err);
+        console.error("Error fetching child detail:", err);
       }
     };
 
@@ -85,7 +79,7 @@ export default function ChildDetailScreen() {
       <ScrollView contentContainerStyle={{ padding: 20 }}>
         {/* 🔹 Child Image */}
         <View className="items-center mb-4">
-          {child.profilepic ? (
+          {child.profilepic && child.profilepic !== "" ? (
             <Image
               source={{ uri: child.profilepic }}
               className="w-32 h-32 rounded-full"
@@ -101,7 +95,7 @@ export default function ChildDetailScreen() {
         </Text>
         <Text className="text-center text-[#2A2E43] mt-1">{child.school}</Text>
         <Text className="text-center text-[#2A2E43] mt-1">
-          Class: {child.class}   Grade: {child.grade}
+          Class: {child.class}{"   "}Grade: {child.grade}
         </Text>
 
         {/* 🔹 Attendance */}
@@ -111,25 +105,33 @@ export default function ChildDetailScreen() {
           </Text>
         </View>
 
-        {/* 🔹 Teachers */}
-        {teachers.map((teacher, idx) => (
-          <View
-            key={idx}
-            className="flex-row bg-white rounded-xl items-center p-4 mb-3"
-          >
-            {renderProfileImage(teacher.profilepic)}
-            <View className="flex-1 ml-4">
-              <Text className="font-semibold text-[#2A2E43]">
-                {teacher.name}
-              </Text>
-              <Text className="text-[#6C7A93] text-sm">{teacher.role}</Text>
+        {/* 🔹 Parents */}
+        {[
+            father ? { ...father, relation: "Father" } : null,
+            mother ? { ...mother, relation: "Mother" } : null,
+            ]
+            .filter((p) => p !== null)
+            .map((parent, idx) => (
+
+            <View
+              key={idx}
+              className="flex-row bg-white rounded-xl items-center p-4 mb-3"
+            >
+              {renderProfileImage(parent.profilepic)}
+              <View className="flex-1 ml-4">
+                <Text className="font-semibold text-[#2A2E43]">
+                  {parent.name}
+                </Text>
+                <Text className="text-[#6C7A93] text-sm">
+                    {parent.relation}
+                </Text>
+              </View>
+              <View>
+                <Text className="text-blue-600 mb-1">Chat</Text>
+                <Text className="text-blue-600">Contact Information</Text>
+              </View>
             </View>
-            <View>
-              <Text className="text-blue-600 mb-1">Chat</Text>
-              <Text className="text-blue-600">Contact Information</Text>
-            </View>
-          </View>
-        ))}
+          ))}
 
         {/* 🔹 Buttons */}
         <TouchableOpacity className="bg-[#C6E3DE] py-4 rounded-full mb-3">
