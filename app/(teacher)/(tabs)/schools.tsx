@@ -7,28 +7,40 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
+import { auth } from "@/firebaseConfig";
+import { ip } from "@/utils/server_ip.json";
 
 const SchoolInfoScreen = () => {
   const [coordinates, setCoordinates] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [school, setSchool] = useState<any>(null);
+  const apiURL = `http://${ip}:8000`;
 
-  //load variables from database
-  const school = {
-    name: "Anderson Primary School",
-    logo: "https://www.andersonpri.moe.edu.sg/qql/slot/u143/Anderson_Primary_School_logo.png",
-    address: "19 Ang Mo Kio Avenue 9, Singapore 569785",
-    postalCode: "569785",
-    website: "https://www.andersonpri.moe.edu.sg",
-  };
-
-  //coverting postal code to coordinates
   useEffect(() => {
-    const fetchCoordinates = async () => {
+    const fetchSchoolInfo = async () => {
       try {
-        const location = await Location.geocodeAsync(school.postalCode);
+        const user = auth.currentUser;
+        if (!user) {
+          Alert.alert("User not logged in");
+          return;
+        }
+
+        const token = await user.getIdToken();
+        const response = await fetch(`${apiURL}/myschool`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch school info");
+
+        const schoolData = await response.json();
+        setSchool(schoolData);
+
+        // Convert postal code to coordinates
+        const location = await Location.geocodeAsync(schoolData.postalCode);
         if (location.length > 0) {
           setCoordinates({
             latitude: location[0].latitude,
@@ -36,14 +48,31 @@ const SchoolInfoScreen = () => {
           });
         }
       } catch (error) {
-        console.error("Geocoding error:", error);
+        console.error("Error fetching school info:", error);
+        Alert.alert("Error", "Could not load school info.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCoordinates();
+    fetchSchoolInfo();
   }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#1E3765" />
+      </View>
+    );
+  }
+
+  if (!school) {
+    return (
+      <View style={styles.container}>
+        <Text style={{ color: "red" }}>No school data found.</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -52,13 +81,7 @@ const SchoolInfoScreen = () => {
       <Text style={styles.schoolName}>{school.name}</Text>
       <Text style={styles.address}>{school.address}</Text>
 
-      {loading ? (
-        <ActivityIndicator
-          size="large"
-          color="#1E3765"
-          style={{ marginVertical: 20 }}
-        />
-      ) : coordinates ? (
+      {coordinates ? (
         <MapView
           style={styles.map}
           initialRegion={{

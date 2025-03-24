@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,8 +8,9 @@ import {
   StyleSheet,
 } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { useLocalSearchParams } from "expo-router";
 
-// ✅ Sample Student Data (Using Icons Instead of Images)
+// ✅ Sample Student Data (Replace with Firestore/Backend later)
 const students = [
   {
     id: "1",
@@ -90,32 +91,43 @@ const students = [
   },
 ];
 
-const classdetails = () => {
+const ClassDetails = () => {
+  const { classId = "1E4" } = useLocalSearchParams(); // ✅ Dynamic class name from router param
   const [searchQuery, setSearchQuery] = useState("");
+  const [dateString, setDateString] = useState("");
 
-  // ✅ Count Present Students
+  useEffect(() => {
+    const today = new Date();
+    const options = {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    };
+    const formatted = today.toLocaleDateString("en-GB", options); // e.g., 24 March 2025, Monday
+    setDateString(formatted);
+  }, []);
+
   const presentCount = students.filter(
-    (student) => student.attendance === "Present"
+    (s) => s.attendance === "Present"
   ).length;
   const totalStudents = students.length;
 
-  // ✅ Filter Students Based on Search Query
-  const filteredStudents = students.filter((student) =>
-    student.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredStudents = students.filter((s) =>
+    s.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <View style={styles.container}>
-      {/* ✅ Attendance Title */}
-      <Text style={styles.attendanceTitle}>05/02/25, Friday Attendance</Text>
+      {/* ✅ Dynamic Date & Class Title */}
+      <Text style={styles.attendanceTitle}>{`${dateString} Attendance`}</Text>
 
-      {/* ✅ Class Info Card */}
       <View style={styles.classCard}>
         <View style={styles.classIconContainer}>
           <FontAwesome5 name="book" size={20} color="#fff" />
         </View>
         <View style={styles.classTextContainer}>
-          <Text style={styles.className}>1E4</Text>
+          <Text style={styles.className}>{classId}</Text>
           <Text style={styles.classSubject}>Science</Text>
         </View>
         <View style={styles.classActions}>
@@ -124,7 +136,6 @@ const classdetails = () => {
         </View>
       </View>
 
-      {/* ✅ Search Bar */}
       <TextInput
         style={styles.searchBar}
         placeholder="Search for someone"
@@ -132,7 +143,6 @@ const classdetails = () => {
         onChangeText={(text) => setSearchQuery(text)}
       />
 
-      {/* ✅ Student List */}
       <View style={styles.studentListContainer}>
         <FlatList
           data={filteredStudents}
@@ -141,7 +151,6 @@ const classdetails = () => {
           renderItem={({ item }) => (
             <View style={styles.studentRow}>
               <View style={styles.studentInfo}>
-                {/* ✅ Student Icon */}
                 <FontAwesome5
                   name="user-circle"
                   size={24}
@@ -153,7 +162,8 @@ const classdetails = () => {
               <Text
                 style={[styles.attendanceStatus, { color: item.statusColor }]}
               >
-                {item.attendance}
+                {" "}
+                {item.attendance}{" "}
               </Text>
               <TouchableOpacity style={styles.manageButton}>
                 <Text style={styles.manageText}>Manage</Text>
@@ -163,7 +173,6 @@ const classdetails = () => {
         />
       </View>
 
-      {/* ✅ Attendance Summary */}
       <View style={styles.summaryContainer}>
         <Text style={styles.summaryText}>Total: {totalStudents} Students</Text>
         <Text style={styles.summaryText}>
@@ -174,7 +183,6 @@ const classdetails = () => {
   );
 };
 
-// ✅ Styles (Fixed Overlapping Issue)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -221,11 +229,11 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   studentListContainer: {
-    flex: 1, // ✅ Ensures the list takes up only available space
+    flex: 1,
   },
   studentList: {
     paddingTop: 10,
-    paddingBottom: 80, // ✅ Adds space so summary is not overlapped
+    paddingBottom: 80,
   },
   studentRow: {
     flexDirection: "row",
@@ -265,7 +273,7 @@ const styles = StyleSheet.create({
   },
   summaryContainer: {
     alignItems: "center",
-    marginBottom: 20, // ✅ Prevents it from sticking too low
+    marginBottom: 20,
   },
   summaryText: {
     fontSize: 15,
@@ -274,4 +282,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default classdetails;
+export default ClassDetails;

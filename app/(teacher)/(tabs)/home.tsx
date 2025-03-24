@@ -6,7 +6,7 @@ const profileImage = require("../../../assets/images/female_profile_pic.webp");
 
 const Homepage = () => {
   return (
-    <View className="flex-1 bg-[#E6F0EE] items-center justify-center">
+    <View className="flex-1 bg-[#f6fff8] items-center justify-center">
       <Image source={profileImage} className="w-20 h-20 rounded-full mb-2" />
       <Text className="text-lg font-semibold mb-5 text-black">
         Welcome back, Jaslyn
