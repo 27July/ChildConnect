@@ -7,8 +7,8 @@ import { ip } from "@/utils/server_ip.json";
 import ProfilePic from "../../../assets/images/profilepic.svg";
 
 export default function AttendanceRecord() {
-  const { date } = useLocalSearchParams();
-  const [entries, setEntries] = useState<any[]>([]);
+  const { date, id: childId } = useLocalSearchParams();
+  const [entry, setEntry] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const apiURL = `http://${ip}:8000`;
 
@@ -24,38 +24,40 @@ export default function AttendanceRecord() {
         });
 
         if (!res.ok) {
-          setEntries([]);
+          setEntry(null);
           return;
         }
 
         const data = await res.json(); // [{ childid, image, present }]
-        const enriched = await Promise.all(
-          data.map(async (entry: any) => {
-            const childRes = await fetch(`${apiURL}/child/${entry.childid}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            const childData = await childRes.json();
-            return {
-              ...entry,
-              name: childData.name,
-              class: childData.class,
-              grade: childData.grade,
-              profilepic: childData.profilepic,
-            };
-          })
-        );
+        const matched = data.find((e: any) => e.childid === childId);
 
-        setEntries(enriched);
+        if (!matched) {
+          setEntry(null);
+          return;
+        }
+
+        const childRes = await fetch(`${apiURL}/child/${childId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const childData = await childRes.json();
+        setEntry({
+          ...matched,
+          name: childData.name,
+          class: childData.class,
+          grade: childData.grade,
+          profilepic: childData.profilepic,
+        });
       } catch (err) {
         console.error("Error fetching attendance record:", err);
-        setEntries([]);
+        setEntry(null);
       } finally {
         setLoading(false);
       }
     };
 
     fetchDetails();
-  }, [date]);
+  }, [date, childId]);
 
   return (
     <SafeAreaView className="flex-1 bg-primary-50 p-5">
@@ -64,63 +66,57 @@ export default function AttendanceRecord() {
           Attendance {formatDisplayDate(date as string)}
         </Text>
 
-        {entries.length === 0 ? (
+        {!entry ? (
           <View className="items-center justify-center mt-20">
-          <Text className="text-xl font-semibold text-red-500 mb-2">
-            No data recorded for this day
-          </Text>
-          <Text className="text-base text-gray-500 text-center px-8">
-            Contact a teacher if you believe this is an error.
-          </Text>
-        </View>
-        
+            <Text className="text-xl font-semibold text-red-500 mb-2">
+              No data recorded for this day
+            </Text>
+            <Text className="text-base text-gray-500 text-center px-8">
+              Contact a teacher if you believe this is an error.
+            </Text>
+          </View>
         ) : (
-          entries.map((entry, idx) => (
-            <View
-              key={idx}
-              className="bg-white rounded-xl px-4 py-6 mb-5 items-center"
-            >
-              {/* 🔹 Profile Image (top) */}
-              {entry.profilepic && entry.profilepic !== "" ? (
+          <View className="bg-white rounded-xl px-4 py-6 mb-5 items-center">
+            {/* 🔹 Profile Image (top) */}
+            {entry.profilepic && entry.profilepic !== "" ? (
+              <Image
+                source={{ uri: entry.profilepic }}
+                className="w-24 h-24 rounded-full mb-2"
+              />
+            ) : (
+              <ProfilePic width={96} height={96} className="mb-2" />
+            )}
+
+            {/* 🔹 Name + School Info */}
+            <Text className="text-primary-400 font-bold text-lg">
+              {entry.name}
+            </Text>
+            <Text className="text-[#6C7A93] mb-4">
+              Class: {entry.class}   Grade: {entry.grade}
+            </Text>
+
+            {/* 🔹 Attendance Image + Status */}
+            <View className="flex-row items-center justify-between w-full px-4">
+              {/* Attendance Image */}
+              {entry.image && entry.image !== "null" ? (
                 <Image
-                  source={{ uri: entry.profilepic }}
-                  className="w-24 h-24 rounded-full mb-2"
+                  source={{ uri: entry.image }}
+                  className="w-32 h-32 rounded-xl"
                 />
               ) : (
-                <ProfilePic width={96} height={96} className="mb-2" />
+                <ProfilePic width={128} height={128} />
               )}
 
-              {/* 🔹 Name + School Info */}
-              <Text className="text-primary-400 font-bold text-lg">
-                {entry.name}
+              {/* 🔹 Status depends on entry.present */}
+              <Text
+                className={`text-lg font-bold ${
+                  entry.present ? "text-green-600" : "text-red-600"
+                }`}
+              >
+                {entry.present ? "Present" : "Absent"}
               </Text>
-              <Text className="text-[#6C7A93] mb-4">
-                Class: {entry.class}   Grade: {entry.grade}
-              </Text>
-
-              {/* 🔹 Attendance Image + Status */}
-              <View className="flex-row items-center justify-between w-full px-4">
-                {/* Attendance Image */}
-                {entry.image && entry.image !== "null" ? (
-                  <Image
-                    source={{ uri: entry.image }}
-                    className="w-32 h-32 rounded-xl"
-                  />
-                ) : (
-                  <ProfilePic width={128} height={128} />
-                )}
-
-                {/* 🔹 Status depends on entry.present */}
-                <Text
-                  className={`text-lg font-bold ${
-                    entry.present ? "text-green-600" : "text-red-600"
-                  }`}
-                >
-                  {entry.present ? "Present" : "Absent"}
-                </Text>
-              </View>
             </View>
-          ))
+          </View>
         )}
       </ScrollView>
     </SafeAreaView>

@@ -2,136 +2,191 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  Image,
-  Linking,
   TouchableOpacity,
-  StyleSheet,
+  FlatList,
   ActivityIndicator,
+  Linking,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { auth } from "@/firebaseConfig";
+import { ip } from "@/utils/server_ip.json";
 
-const SchoolInfoScreen = () => {
-  const [coordinates, setCoordinates] = useState(null);
+export default function SchoolsScreen() {
+  const [schools, setSchools] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const apiURL = `http://${ip}:8000`;
 
-  //load variables from database
-  const school = {
-    name: "Anderson Primary School",
-    logo: "https://www.andersonpri.moe.edu.sg/qql/slot/u143/Anderson_Primary_School_logo.png",
-    address: "19 Ang Mo Kio Avenue 9, Singapore 569785",
-    postalCode: "569785",
-    website: "https://www.andersonpri.moe.edu.sg",
-  };
-
-  //coverting postal code to coordinates
   useEffect(() => {
-    const fetchCoordinates = async () => {
+    const fetchSchools = async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        console.warn("User not logged in");
+        return;
+      }
+      const token = await user.getIdToken();
+
       try {
-        const location = await Location.geocodeAsync(school.postalCode);
-        if (location.length > 0) {
-          setCoordinates({
-            latitude: location[0].latitude,
-            longitude: location[0].longitude,
-          });
-        }
-      } catch (error) {
-        console.error("Geocoding error:", error);
+        console.log("Fetching schools from:", `${apiURL}/schoolsinfo`);
+        const res = await fetch(`${apiURL}/schoolsinfo`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) throw new Error("Failed to fetch schools");
+
+        const data = await res.json();
+        console.log("Raw school data from backend:", data);
+
+        const enriched = await Promise.all(
+          data.map(async (school: any) => {
+            console.log("Attempting to geocode postal code:", school.postal_code);
+
+            try {
+              const location = await Location.geocodeAsync(school.postal_code);
+              if (location.length > 0) {
+                const enrichedSchool = {
+                  ...school,
+                  coordinates: {
+                    latitude: location[0].latitude,
+                    longitude: location[0].longitude,
+                  },
+                };
+                console.log("Geocoded:", enrichedSchool);
+                return enrichedSchool;
+              } else {
+                console.warn("No location returned for:", school.school_name);
+              }
+            } catch (e) {
+              console.warn("Geocoding failed for:", school.school_name, e);
+            }
+
+            return school; // Still return the school even if geocoding fails
+          })
+        );
+
+        console.log("Final list of enriched schools:", enriched);
+        setSchools(enriched);
+      } catch (err) {
+        console.error("Error fetching schools:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCoordinates();
+    fetchSchools();
   }, []);
 
-  return (
-    <View style={styles.container}>
-      <Image source={{ uri: school.logo }} style={styles.logo} />
+  if (loading) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-primary-50">
+        <ActivityIndicator size="large" color="#1E3765" />
+      </SafeAreaView>
+    );
+  }
 
-      <Text style={styles.schoolName}>{school.name}</Text>
-      <Text style={styles.address}>{school.address}</Text>
-
-      {loading ? (
-        <ActivityIndicator
-          size="large"
-          color="#1E3765"
-          style={{ marginVertical: 20 }}
-        />
-      ) : coordinates ? (
-        <MapView
-          style={styles.map}
-          initialRegion={{
-            ...coordinates,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }}
-        >
-          <Marker
-            coordinate={coordinates}
-            title={school.name}
-            description={school.address}
-          />
-        </MapView>
-      ) : (
-        <Text style={{ color: "red", marginVertical: 20 }}>
-          Unable to load map.
+  if (schools.length === 0) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-primary-50 px-5">
+        <Text className="text-xl font-bold text-gray-500 text-center">
+          No schools available for your children.
         </Text>
-      )}
+      </SafeAreaView>
+    );
+  }
 
-      <TouchableOpacity
-        style={styles.websiteButton}
-        onPress={() => Linking.openURL(school.website)}
-      >
-        <Text style={styles.websiteButtonText}>Visit Website</Text>
-      </TouchableOpacity>
-    </View>
+  return (
+    <SafeAreaView className="flex-1 bg-primary-50">
+      <FlatList
+        data={schools}
+        keyExtractor={(item) => item.school_name}
+        contentContainerStyle={{ padding: 20 }}
+        renderItem={({ item }) => (
+          <View className="bg-white p-5 rounded-2xl mb-5">
+            <Text className="text-xl font-bold text-primary-400 mb-1 text-center">
+              {item.school_name}
+            </Text>
+            <Text className="text-sm text-gray-600 text-center mb-1">
+              {item.address}
+            </Text>
+            <Text className="text-sm text-gray-500 text-center mb-3">
+              Postal Code: {item.postal_code}
+            </Text>
+
+            <View className="items-center mb-3">
+              {item.principal_name && (
+                <Text className="text-sm text-gray-500">
+                  Principal: {item.principal_name}
+                </Text>
+              )}
+              {item.first_vp_name && item.first_vp_name !== "NA" && (
+                <Text className="text-sm text-gray-500">
+                  Vice Principal: {item.first_vp_name}
+                </Text>
+              )}
+              {item.email_address && (
+                <Text className="text-sm text-gray-500">
+                  Email Address: {item.email_address}
+                </Text>
+              )}
+              {item.fax_no && (
+                <Text className="text-sm text-gray-500 mb-1">
+                  Fax: {item.fax_no}
+                </Text>
+              )}
+            </View>
+
+            {item.telephone_no && item.telephone_no !== "na" && (
+              <TouchableOpacity
+                className="bg-primary-400 py-3 px-28 rounded-md mb-4"
+                onPress={() => Linking.openURL(`tel:${item.telephone_no}`)}
+              >
+                <Text className="text-white font-semibold text-base text-center">
+                  Call School
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {item.coordinates ? (
+              <MapView
+                style={{ width: "100%", height: 200, borderRadius: 12, marginBottom: 12 }}
+                initialRegion={{
+                  ...item.coordinates,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                }}
+              >
+                <Marker
+                  coordinate={item.coordinates}
+                  title={item.school_name}
+                  description={item.address}
+                />
+              </MapView>
+            ) : (
+              <Text className="text-red-500 mb-3 text-center">Map unavailable</Text>
+            )}
+
+            {item.url_address ? (
+              <TouchableOpacity
+                className="bg-primary-400 py-3 px-28 rounded-md"
+                onPress={() =>
+                  Linking.openURL(
+                    item.url_address.startsWith("http")
+                      ? item.url_address
+                      : `https://${item.url_address}`
+                  )
+                }
+              >
+                <Text className="text-white font-semibold text-base text-center">
+                  Visit Website
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <Text className="text-gray-400 mt-2 text-center">No website available</Text>
+            )}
+          </View>
+        )}
+      />
+    </SafeAreaView>
   );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f6fff8",
-    alignItems: "center",
-    padding: 20,
-  },
-  logo: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 15,
-  },
-  schoolName: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#1E3765",
-    marginBottom: 5,
-    textAlign: "center",
-  },
-  address: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 15,
-    textAlign: "center",
-  },
-  map: {
-    width: "100%",
-    height: 200,
-    borderRadius: 10,
-    marginBottom: 20,
-  },
-  websiteButton: {
-    backgroundColor: "#1E3765",
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 8,
-  },
-  websiteButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});
-
-export default SchoolInfoScreen;
+}

@@ -106,7 +106,11 @@ export default function AttendanceScreen() {
           markedDates={markedDates}
           onDayPress={(day) => {
             const compactDate = day.dateString.split("-").reverse().join(""); // "2025-03-25" -> "25032025"
-            router.push({ pathname: "../../profile/attendanceRecord", params: { date: compactDate } });
+            router.push({ 
+              pathname: "/profile/attendanceRecord", 
+              params: { date: compactDate, id: childId } 
+            });
+            
           }}          
           theme={{
             textDayFontWeight: "bold",

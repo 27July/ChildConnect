@@ -264,20 +264,67 @@ def get_attendance_by_date(date: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="No attendance record for that date")
 
     data = doc.to_dict()
-    children = data.get("children", [])
+    children = data.get("children", [])  # Present children only
     images = data.get("childrenimage", [])
 
-    # Ensure images list is same length as children (fallback to "null")
-    if len(images) < len(children):
-        images += ["null"] * (len(children) - len(images))
+    # Fetch all children for this user
+    all_children_docs = db.collection("children") \
+        .where("fatherid", "==", user["uid"]) \
+        .stream()
 
-    # Return child attendance entries with presence info
-    return [
-        {
-            "childid": child_id,
-            "image": img_url,
-            "present": True  # ✅ all children listed are present
-        }
-        for child_id, img_url in zip(children, images)
-    ]
+    mother_docs = db.collection("children") \
+        .where("motherid", "==", user["uid"]) \
+        .stream()
+
+    all_docs = list(all_children_docs) + list(mother_docs)
+
+    results = []
+    for doc in all_docs:
+        cdata = doc.to_dict()
+        cid = doc.id
+        present = cid in children
+        image = "null"
+        if present:
+            index = children.index(cid)
+            image = images[index] if index < len(images) else "null"
+
+        results.append({
+            "childid": cid,
+            "present": present,
+            "image": image
+        })
+
+    return results
+
+
+# ✅ BACKEND: FastAPI route
+@app.get("/schoolsinfo")
+def get_schools_info(user=Depends(get_current_user)):
+    uid = user["uid"]
+    schools = set()
+
+    # Fetch children where user is father or mother
+    father_query = db.collection("children").where("fatherid", "==", uid).stream()
+    mother_query = db.collection("children").where("motherid", "==", uid).stream()
+
+    for doc in father_query:
+        data = doc.to_dict()
+        if "school" in data:
+            schools.add(data["school"])
+
+    for doc in mother_query:
+        data = doc.to_dict()
+        if "school" in data:
+            schools.add(data["school"])
+
+    school_infos = []
+    for school_name in schools:
+        doc = db.collection("schoolapi").document(school_name).get()
+        if doc.exists:
+            info = doc.to_dict()
+            info["school_name"] = school_name
+            school_infos.append(info)
+
+    return school_infos
+
 
