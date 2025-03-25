@@ -17,6 +17,7 @@ import { useRouter } from "expo-router";
 
 export default function ChildDetailScreen() {
   const { id } = useLocalSearchParams();
+  console.log("🧩 Param from [id].tsx:", id);
   const [child, setChild] = useState<any>(null);
   const [teachers, setTeachers] = useState<any[]>([]);
   const apiURL = `http://${ip}:8000`;
@@ -148,13 +149,30 @@ export default function ChildDetailScreen() {
 
 
         <TouchableOpacity
-          className="bg-[#C6E3DE] py-4 rounded-full"
+          className="bg-[#C6E3DE] py-4 rounded-full mb-3"
           onPress={() => router.push({ pathname: "../../profile/documentationlist", params: { id} })}
         >
           <Text className="text-center font-bold text-[#2A2E43]">
             Documentation
           </Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          className="bg-[#C6E3DE] py-4 rounded-full mb-3"
+          onPress={() => {
+            console.log("➡️ Navigating to childhomework.tsx with childId:", id);
+            router.push({
+              pathname: "../../profile/childhomework",
+              params: { childId: id },
+            });
+          }}
+        >
+          <Text className="text-center font-bold text-[#2A2E43]">
+            Homework List
+          </Text>
+        </TouchableOpacity>
+
+
       </ScrollView>
     </SafeAreaView>
   );
