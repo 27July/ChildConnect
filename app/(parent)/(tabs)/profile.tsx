@@ -38,11 +38,6 @@ export default function Profile() {
       setUserData(profile);
       setEditableUserData({ ...profile });
 
-      const childRes = await fetch(`${apiURL}/mychildren`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const childList = await childRes.json();
-      setChildren(childList);
     } catch (err) {
       console.error("Error loading profile data", err);
     }
@@ -153,34 +148,6 @@ export default function Profile() {
           </TouchableOpacity>
         )}
 
-        {/* 🔹 Children Section */}
-        <Text className="text-lg font-bold mt-8 mb-3">Your Children</Text>
-        {Object.keys(groupedBySchool).map((school) => (
-          <View key={school} className="mb-5">
-            <Text className="text-base font-semibold text-gray-700 mb-2">
-              {school}
-            </Text>
-            {groupedBySchool[school].map((child: any) => (
-              <View
-                key={child.id}
-                className="flex-row bg-white rounded-xl p-4 items-center mb-2"
-              >
-                {child.profilepic ? (
-                  <Image
-                    source={{ uri: child.profilepic }}
-                    className="w-12 h-12 rounded-full mr-3"
-                  />
-                ) : (
-                  <ProfilePic width={48} height={48} className="mr-3" />
-                )}
-                <View className="flex-1">
-                  <Text className="font-bold text-[#2A2E43]">{child.name}</Text>
-                  <Text className="text-gray-500">{child.gender || ""}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        ))}
       </ScrollView>
     </SafeAreaView>
   );
