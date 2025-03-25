@@ -463,3 +463,19 @@ def update_profile(data: dict = Body(...), user=Depends(get_current_user)):
         print("❌ Error in /updateprofile:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/homework/class/{classid}")
+def get_homework_by_class(classid: str, user=Depends(get_current_user)):
+    homework_docs = db.collection("homework").where("classid", "==", classid).stream()
+    result = []
+    for doc in homework_docs:
+        data = doc.to_dict()
+        data["id"] = doc.id
+        result.append(data)
+    return result
+
+@app.get("/classbynamewithid/{classname}")
+def get_class_by_name_with_id(classname: str, user=Depends(get_current_user)):
+    class_ref = db.collection("class").where("name", "==", classname).limit(1).stream()
+    for doc in class_ref:
+        return doc.to_dict() | {"id": doc.id}
+    raise HTTPException(status_code=404, detail="Class not found")
