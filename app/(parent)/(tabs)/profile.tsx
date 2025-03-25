@@ -1,64 +1,187 @@
-import React from "react";
-import { View, Text, Image } from "react-native";
-import { ContactButton } from "@/components/contactButton";
-import { RecordButton } from "@/components/recordButton";
-//remove later using this because now dont have a database
-import { child } from "@/components/data/childData";
-import { parents } from "@/components/data/parentData";
-import { ChatButton } from "@/components/chatButton";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Alert,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { auth } from "@/firebaseConfig";
+import { ip } from "@/utils/server_ip.json";
+import ProfilePic from "@/assets/images/profilepic.svg";
+import * as ImagePicker from "expo-image-picker";
 
-const ChildPresentProfile = () => {
+export default function Profile() {
+  const [userData, setUserData] = useState<any>(null);
+  const [children, setChildren] = useState<any[]>([]);
+  const [editing, setEditing] = useState(false);
+  const [editableUserData, setEditableUserData] = useState<any>({});
+  const apiURL = `http://${ip}:8000`;
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    const token = await user.getIdToken();
+
+    try {
+      const userRes = await fetch(`${apiURL}/users/${user.uid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const profile = await userRes.json();
+      setUserData(profile);
+      setEditableUserData({ ...profile });
+
+      const childRes = await fetch(`${apiURL}/mychildren`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const childList = await childRes.json();
+      setChildren(childList);
+    } catch (err) {
+      console.error("Error loading profile data", err);
+    }
+  };
+
+  const groupedBySchool = children.reduce((acc: any, child: any) => {
+    const school = child.school || "Unknown School";
+    if (!acc[school]) acc[school] = [];
+    acc[school].push(child);
+    return acc;
+  }, {});
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const base64Img = `data:image/jpeg;base64,${result.assets[0].base64}`;
+      setEditableUserData((prev: any) => ({ ...prev, profilepic: base64Img }));
+    }
+  };
+
+  const handleSave = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    const token = await user.getIdToken();
+
+    try {
+      const res = await fetch(`${apiURL}/updateprofile`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editableUserData),
+      });
+
+      if (!res.ok) throw new Error("Update failed");
+
+      Alert.alert("Success", "Profile updated");
+      setEditing(false);
+      fetchData();
+    } catch (err) {
+      console.error("Error updating user:", err);
+      Alert.alert("Error", "Update failed");
+    }
+  };
+
   return (
-    <View className="flex-1 bg-primary-100 py-6 px-4">
-      {/* Profile Section */}
-      <View className="items-center py-10">
-        <Image source={child.profileImage} className="w-28 h-28 rounded-full" />
-        <Text className="text-xl font-semibold text-gray-800 mt-3">{child.name}</Text>
-        <Text className="text-lg text-gray-700">{child.school}</Text>
-        <Text className="text-sm text-gray-600">
-          Class: {child.classInfo} | Grade: {child.grade}
-        </Text>
-
-        {/* Attendance Badge */}
-        <View className="flex-row bg-primary-300 px-6 py-3 mt-4 rounded-full">
-          <Text className="text-grey-700 text-lg font-bold">Today's Attendance: </Text>
-          <Text className={child.attendanceStatus === "Absent" ? "text-red-500 text-lg font-semibold" : "text-green-300 text-lg font-semibold"}>
-            {child.attendanceStatus}
+    <SafeAreaView className="flex-1 bg-primary-50 px-5">
+      <View className="flex-row justify-between items-center mt-5 mb-4">
+        <Text className="text-2xl font-bold">Profile</Text>
+        <TouchableOpacity onPress={() => setEditing(!editing)}>
+          <Text className="text-primary-400 font-bold">
+            {editing ? "Cancel" : "Edit"}
           </Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
-      {/* Parents Section */}
-      <View className="mt-3">
-        {parents.map((parent, index) => (
-          <View key={index} className="bg-white px-3 py-3 rounded-lg mb-3 shadow-sm">
-            {/* Image, Name, and Chat Button Row */}
-            <View className="flex-row items-center justify-between">
-              <Image source={parent.avatar} className="w-10 h-10 rounded-full" />
-              <View className="flex-1 ml-3">
-                <Text className="font-semibold text-base">{parent.name}</Text>
-              </View>
-              <ChatButton />
-            </View>
+      <ScrollView>
+        <View className="items-center">
+          {userData?.profilepic ? (
+            <Image
+              source={{ uri: userData.profilepic }}
+              className="w-28 h-28 rounded-full mb-3"
+            />
+          ) : (
+            <ProfilePic width={96} height={96} className="mb-3" />
+          )}
 
-            {/* Relationship and Contact Information Row */}
-            <View className="flex-row items-center justify-between mt-2">
-              <View className="flex-1">
-                <Text className="text-gray-500 text-">{parent.relation}</Text>
-              </View>
-              <ContactButton label="Contact information" phoneNumber={parent.phoneNumber} />
-            </View>
+          {editing && (
+            <TouchableOpacity onPress={pickImage}>
+              <Text className="text-primary-500 underline mb-3">
+                {editableUserData.profilepic ? "Change" : "Upload"} Profile Picture
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* 🔹 Profile Fields */}
+        {["name", "email", "phone", "workPhone", "address"].map((field) => (
+          <View key={field} className="mb-3">
+            <Text className="text-gray-600 mb-1 capitalize">{field}</Text>
+            <TextInput
+              editable={field !== "name" && field !== "email" && editing}
+              value={editableUserData[field] || ""}
+              onChangeText={(val) =>
+                setEditableUserData((prev: any) => ({ ...prev, [field]: val }))
+              }
+              className={`bg-white px-4 py-3 rounded-xl ${
+                editing && field !== "name" && field !== "email"
+                  ? "border border-primary-400"
+                  : "text-gray-800"
+              }`}
+            />
           </View>
         ))}
-      </View>
 
-      {/* Records Section */}
-      <View className="mt-6">
-        <RecordButton label="Attendance Record" destination="/parent/profile/attendanceRecord" />
-        <RecordButton label="Documentation" destination="/parent/profile/documentation" />
-      </View>
-    </View>
+        {editing && (
+          <TouchableOpacity
+            className="bg-primary-400 py-3 mt-4 rounded-xl"
+            onPress={handleSave}
+          >
+            <Text className="text-white font-bold text-center">Save</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* 🔹 Children Section */}
+        <Text className="text-lg font-bold mt-8 mb-3">Your Children</Text>
+        {Object.keys(groupedBySchool).map((school) => (
+          <View key={school} className="mb-5">
+            <Text className="text-base font-semibold text-gray-700 mb-2">
+              {school}
+            </Text>
+            {groupedBySchool[school].map((child: any) => (
+              <View
+                key={child.id}
+                className="flex-row bg-white rounded-xl p-4 items-center mb-2"
+              >
+                {child.profilepic ? (
+                  <Image
+                    source={{ uri: child.profilepic }}
+                    className="w-12 h-12 rounded-full mr-3"
+                  />
+                ) : (
+                  <ProfilePic width={48} height={48} className="mr-3" />
+                )}
+                <View className="flex-1">
+                  <Text className="font-bold text-[#2A2E43]">{child.name}</Text>
+                  <Text className="text-gray-500">{child.gender || ""}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        ))}
+      </ScrollView>
+    </SafeAreaView>
   );
-};
-
-export default ChildPresentProfile;
+}

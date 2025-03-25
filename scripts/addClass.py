@@ -11,14 +11,13 @@ def add_class():
     class_data = {
         #Change this values
         "name": "2E1",
-        "schoolname": "Bukit Batok Secondary School",
-        "teacherId": "12345",
+        "schoolname": "ANGLO-CHINESE JUNIOR COLLEGE",
+        "teacherId": "B0oy8wvPyYhPSICvTgLcwDda9dA3",
         "children": [
-            "nkyN2Lz6GMCvHKEaolyY",
-            "wGBPxIhabPbLDYi7HSgX"
+            "Xo67AkleFZhRWLMIdviM",
         ],
         "homework" : [],
-        "subteachers": ["7kDZllrxT2PUusXsnh3T2q2jRUb2"],
+        "subteachers": [],
 
     }
 

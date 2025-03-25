@@ -430,3 +430,36 @@ def create_document(doc: dict = Body(...), user=Depends(get_current_user)):
     except Exception as e:
         print("❌ General error in /createdocument:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/updateprofile")
+def update_profile(data: dict = Body(...), user=Depends(get_current_user)):
+    try:
+        user_id = user["uid"]
+        image_url = data.get("profilepic", "")
+
+        # 🔹 If image is base64, upload it to Cloudinary
+        if isinstance(image_url, str) and image_url.startswith("data:image"):
+            print("📸 Uploading new profile picture to Cloudinary...")
+            base64_str = image_url.split(";base64,")[1]
+            decoded_image = base64.b64decode(base64_str)
+
+            result = cloudinary.uploader.upload(decoded_image)
+            image_url = result["secure_url"]
+            print("✅ Uploaded profile picture to:", image_url)
+
+        # 🔹 Only allow updating selected fields (name & email are excluded)
+        update_data = {
+            "phone": data.get("phone", ""),
+            "workPhone": data.get("workPhone", ""),
+            "address": data.get("address", ""),
+            "profilepic": image_url,
+        }
+
+        db.collection("users").document(user_id).update(update_data)
+
+        return {"message": "Profile updated successfully", "profilepic": image_url}
+
+    except Exception as e:
+        print("❌ Error in /updateprofile:", str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+

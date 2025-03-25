@@ -11,15 +11,16 @@ db = firestore.client()
 def add_child():
     child_data = {
         #Change these values
-        "class": "1E4",
+        "class": "1SB4",
         "fatherid": "JaVurUsjegNoR6WbZwM8Ym9WYCA3",
         "fathername": "Bob Tan",
-        "motherid": "",
-        "mothername": "",
-        "name" : "Jack Tan",
+        "motherid": "XoCBooRiRJWcEROn44g9qFIesjp2",
+        "mothername": "Becky Chua",
+        "name" : "Peter Tan",
         "documents" : [],
         "profilepic": "",
-        "grade": "",
+        "grade": "J1",
+        "school": "ANGLO-CHINESE JUNIOR COLLEGE"
     }
 
     # Optional: Use custom doc ID
