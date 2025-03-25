@@ -147,7 +147,10 @@ export default function ChildDetailScreen() {
 
 
 
-        <TouchableOpacity className="bg-[#C6E3DE] py-4 rounded-full">
+        <TouchableOpacity
+          className="bg-[#C6E3DE] py-4 rounded-full"
+          onPress={() => router.push({ pathname: "../../profile/documentationlist", params: { id} })}
+        >
           <Text className="text-center font-bold text-[#2A2E43]">
             Documentation
           </Text>

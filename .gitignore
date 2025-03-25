@@ -47,3 +47,5 @@ pycache
 venv
 
 utils/server_ip.json
+
+.cloudenv

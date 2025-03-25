@@ -1,11 +1,38 @@
 import os
 import json
 import socket
+import firebase_admin
+import uuid
+import base64
+import cloudinary
+import cloudinary.uploader
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from services.firebase_auth import get_current_user  # ✅ Firebase authentication
-from firebase_admin import firestore
 from services.schoolsapi import preload_school_data
+from fastapi import FastAPI, HTTPException, Depends, Body
+from datetime import datetime
+from firebase_admin import credentials, storage, firestore
+
+
+
+cloudinary.config(
+    cloud_name="dqatmjayu",       # replace this
+    api_key="834117339387158",             # replace this
+    api_secret="i7DlGpun3n5836ecuvyXZe3Buiw"        # replace this
+)
+
+
+
+# ✅ Replace with your actual project ID
+PROJECT_ID = "childconnect-1eacf"  # <--- 🔁 Replace this with your actual Firebase Project ID
+
+# ✅ Initialize Firebase Admin with Storage
+if not firebase_admin._apps:
+    cred = credentials.Certificate("serviceAccountKey.json")  # Path to your service account key
+    firebase_admin.initialize_app(cred, {
+        "storageBucket": f"{PROJECT_ID}.appspot.com"
+    })
 
 db = firestore.client()
 
@@ -23,6 +50,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 
 # ✅ Function to get the local IP of the FastAPI server
 def get_local_ip():
@@ -327,4 +356,77 @@ def get_schools_info(user=Depends(get_current_user)):
 
     return school_infos
 
+@app.get("/documents/{childid}")
+def get_documents_for_child(childid: str, user=Depends(get_current_user)):
+    docs = db.collection("documents").where("childrenid", "==", childid).stream()
 
+    results = []
+    for doc in docs:
+        data = doc.to_dict()
+        data["id"] = doc.id
+        results.append(data)
+
+    return results
+
+@app.patch("/documents/{doc_id}/toggle")
+def toggle_document_status(doc_id: str, user=Depends(get_current_user)):
+    doc_ref = db.collection("documents").document(doc_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    data = doc.to_dict()
+    if data["createdby"] != user["uid"]:
+        raise HTTPException(status_code=403, detail="Not allowed")
+
+    new_status = "closed" if data["status"] == "open" else "open"
+    doc_ref.update({"status": new_status})
+    return {"status": new_status}
+
+@app.post("/createdocument")
+def create_document(doc: dict = Body(...), user=Depends(get_current_user)):
+    try:
+        image_url = ""
+        image_data = doc.get("image")
+
+        # ✅ Handle optional image upload to Cloudinary
+        if isinstance(image_data, str) and image_data.startswith("data:image"):
+            print("📸 Image received. Uploading to Cloudinary...")
+
+            try:
+                base64_str = image_data.split(";base64,")[1]
+                decoded_image = base64.b64decode(base64_str)
+
+                result = cloudinary.uploader.upload(
+                    decoded_image,
+                    folder="documentation",
+                    public_id=str(uuid.uuid4()),
+                    resource_type="image"
+                )
+
+                image_url = result.get("secure_url", "")
+                print("✅ Image uploaded:", image_url)
+
+            except Exception as e:
+                print("❌ Cloudinary upload failed:", e)
+                raise HTTPException(status_code=500, detail="Image upload failed")
+
+        # ✅ Create the document
+        new_doc = {
+            "name": doc.get("name", ""),
+            "content": doc.get("content", ""),
+            "image": image_url,
+            "status": "open",
+            "createdby": user["uid"],
+            "childrenid": doc.get("childid"),
+            "created": datetime.now(),
+        }
+
+        created_ref = db.collection("documents").document()
+        created_ref.set(new_doc)
+
+        return {"message": "Document created", "id": created_ref.id}
+
+    except Exception as e:
+        print("❌ General error in /createdocument:", str(e))
+        raise HTTPException(status_code=500, detail=str(e))
