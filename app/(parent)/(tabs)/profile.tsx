@@ -37,7 +37,6 @@ export default function Profile() {
       const profile = await userRes.json();
       setUserData(profile);
       setEditableUserData({ ...profile });
-
     } catch (err) {
       console.error("Error loading profile data", err);
     }
@@ -91,7 +90,7 @@ export default function Profile() {
 
   return (
     <SafeAreaView className="flex-1 bg-primary-50 px-5">
-      <View className="flex-row justify-between items-center mt-5 mb-4">
+      <View className="flex-row justify-between items-center mb-4">
         <Text className="text-2xl font-bold">Profile</Text>
         <TouchableOpacity onPress={() => setEditing(!editing)}>
           <Text className="text-primary-400 font-bold">
@@ -114,7 +113,8 @@ export default function Profile() {
           {editing && (
             <TouchableOpacity onPress={pickImage}>
               <Text className="text-primary-500 underline mb-3">
-                {editableUserData.profilepic ? "Change" : "Upload"} Profile Picture
+                {editableUserData.profilepic ? "Change" : "Upload"} Profile
+                Picture
               </Text>
             </TouchableOpacity>
           )}
@@ -147,7 +147,6 @@ export default function Profile() {
             <Text className="text-white font-bold text-center">Save</Text>
           </TouchableOpacity>
         )}
-
       </ScrollView>
     </SafeAreaView>
   );
