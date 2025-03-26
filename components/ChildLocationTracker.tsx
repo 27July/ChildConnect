@@ -8,6 +8,9 @@ let locationSubscription: Location.LocationSubscription | null = null;
  * @param onLocationUpdate - Callback to receive updated location.
  * @param intervalMs - How often to get location updates (default: 10 seconds).
  */
+
+let isTracking = false;
+
 export const startForegroundTracking = async (
   onLocationUpdate: (location: Location.LocationObjectCoords) => void,
   intervalMs: number = 10000
