@@ -38,6 +38,7 @@ export default function ChildScreen() {
   const mapRef = useRef<MapView | null>(null);
 
   const SCHOOL_LOCATION = {
+    // School location to backend
     latitude: 1.3462227582931519,
     longitude: 103.68243408203125,
     radius: 200,
@@ -47,6 +48,7 @@ export default function ChildScreen() {
     let intervalId: NodeJS.Timeout;
 
     const fetchChildLocationFromBackend = async () => {
+      //CHILD'S LOCATION FROM BACKEND
       try {
         const fetchedLocation = {
           latitude: 1.3376,

@@ -49,9 +49,9 @@ export default function LoginScreen() {
       Alert.alert("Login Successful", `${data.name}`);
 
       if (data.role === "parent") {
-        router.replace("./(parent)/home");
+        router.replace("./(parent)/(tabs)/home");
       } else if (data.role === "teacher") {
-        router.replace("./(teacher)/home");
+        router.replace("./(teacher)/(tabs)/home");
       }
     } catch (error: any) {
       console.error("Login Error:", error.message);
