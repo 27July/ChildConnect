@@ -1,12 +1,10 @@
-#homework_route.py
-# This file will contain the routes to manage homework data in Firestore.
+# homework_routes.py
 
-from fastapi import APIRouter, Body, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from firebase_admin import firestore
-from datetime import datetime
 from services.firebase_auth import get_current_user
 
-router = APIRouter()
+router = APIRouter(tags=["Homework"])
 db = firestore.client()
 
 @router.get("/homework/class/{classid}")

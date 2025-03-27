@@ -1,17 +1,12 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, ScrollView, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { auth } from "@/firebaseConfig";
 import { ip } from "@/utils/server_ip.json";
 
 export default function ChildHomeworkScreen() {
-  const { childId } = useLocalSearchParams();
+  const { id: childId } = useLocalSearchParams();
   console.log("📦 childhomework.tsx received param childId:", childId);
 
   const [homework, setHomework] = useState<any[]>([]);
@@ -30,7 +25,10 @@ export default function ChildHomeworkScreen() {
 
       try {
         // 1. Get the child info
-        console.log("📁 Fetching child data from:", `${apiURL}/child/${childId}`);
+        console.log(
+          "📁 Fetching child data from:",
+          `${apiURL}/child/${childId}`
+        );
         const childRes = await fetch(`${apiURL}/child/${childId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -39,10 +37,12 @@ export default function ChildHomeworkScreen() {
 
         // 2. Get class document to retrieve class ID
         console.log("🏫 Fetching class data for class:", childData.class);
-        const classRes = await fetch(`${apiURL}/classbynamewithid/${childData.class}`, {
-
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const classRes = await fetch(
+          `${apiURL}/classbynamewithid/${childData.class}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         const classData = await classRes.json();
         const classid = classData?.id;
         console.log("📘 Class ID:", classid);
@@ -117,10 +117,7 @@ export default function ChildHomeworkScreen() {
       ) : (
         <ScrollView>
           {homework.map((hw, idx) => (
-            <View
-              key={idx}
-              className="bg-white rounded-3xl p-5 mb-4"
-            >
+            <View key={idx} className="bg-white rounded-3xl p-5 mb-4">
               <Text className="text-lg font-bold text-[#2A2E43] mb-1">
                 {hw.name}
               </Text>
@@ -130,9 +127,7 @@ export default function ChildHomeworkScreen() {
               <Text className="text-sm text-gray-600">
                 Due: {formatDate(hw.duedate)}
               </Text>
-              <Text className="text-sm text-gray-600">
-                Status: {hw.status}
-              </Text>
+              <Text className="text-sm text-gray-600">Status: {hw.status}</Text>
               <Text className="text-sm text-gray-600 italic mt-1">
                 Assigned by: {hw.teacherName}
               </Text>

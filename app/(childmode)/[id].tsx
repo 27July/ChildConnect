@@ -41,6 +41,19 @@ export default function ChildModeScreen() {
     }, [navigation])
   );
 
+  const formatDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString("en-SG", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    } catch (err) {
+      return "Invalid date";
+    }
+  };
+
   // Listen to real-time tracking status
   useEffect(() => {
     const db = getFirestore();
@@ -94,21 +107,21 @@ export default function ChildModeScreen() {
       try {
         const token = await auth.currentUser?.getIdToken();
 
-        // Step 1: Get classid from childid
+        // Step 1: Get child data
+        const childRes = await fetch(`http://${ip}:8000/child/${childId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const childData = await childRes.json();
+
+        // Step 2: Get class document to retrieve class ID
         const classRes = await fetch(
-          `http://${ip}:8000/child/${childId}/class`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          `http://${ip}:8000/classbynamewithid/${childData.class}`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
+        const classData = await classRes.json();
+        const classid = classData.id;
 
-        if (!classRes.ok) throw new Error("Failed to fetch class");
-
-        const { classid } = await classRes.json();
-
-        // Step 2: Fetch homework for that class
+        // Step 3: Fetch homework for that class
         const hwRes = await fetch(
           `http://${ip}:8000/homework/class/${classid}`,
           {
@@ -121,6 +134,7 @@ export default function ChildModeScreen() {
         if (!hwRes.ok) throw new Error("Failed to fetch homework");
 
         const homeworkData = await hwRes.json();
+        console.log("📚 Homework Data:", homeworkData); //for debugging
         setHomeworkList(homeworkData);
       } catch (err) {
         console.error("❌ Error loading homework:", err);
@@ -199,9 +213,9 @@ export default function ChildModeScreen() {
         ]}
         renderItem={({ item }) => (
           <View style={styles.homeworkCard}>
-            <Text style={styles.subject}>{item.subject}</Text>
-            <Text style={styles.task}>{item.task}</Text>
-            <Text style={styles.dueDate}>Due: {item.due}</Text>
+            <Text style={styles.subject}>{item.name}</Text>
+            <Text style={styles.task}>{item.content}</Text>
+            <Text style={styles.dueDate}>Due: {formatDate(item.duedate)}</Text>
           </View>
         )}
       />

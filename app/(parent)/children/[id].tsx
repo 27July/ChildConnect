@@ -283,9 +283,12 @@ export default function ChildDetailScreen() {
 
         {/* Navigation buttons */}
         {[
-          { label: "Attendance Records", path: "../../profile/attendance" },
-          { label: "Documentation", path: "../../profile/documentationlist" },
-          { label: "Homework List", path: "../../profile/childhomework" },
+          { label: "Attendance Records", path: "../profile/attendance" },
+          { label: "Documentation", path: "../profile/documentationlist" },
+          {
+            label: "Homework List",
+            path: "../profile/childhomework",
+          },
         ].map(({ label, path }, index) => (
           <TouchableOpacity
             key={index}
