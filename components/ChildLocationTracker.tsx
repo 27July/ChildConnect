@@ -1,3 +1,6 @@
+// Purpose: This file contains the code for the ChildLocationTracker component, which is used to track the location of the child user.
+// It uses the Expo Location API to track the location of the device in the foreground.
+
 import * as Location from "expo-location";
 
 let locationSubscription: Location.LocationSubscription | null = null;

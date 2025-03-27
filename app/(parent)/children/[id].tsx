@@ -24,7 +24,6 @@ import {
   stopForegroundTracking,
 } from "../../../components/ChildLocationTracker";
 import { ShieldUser } from "lucide-react-native";
-// ... (imports remain unchanged)
 
 export default function ChildDetailScreen() {
   const { id: childId } = useLocalSearchParams();
@@ -51,11 +50,12 @@ export default function ChildDetailScreen() {
     longitude: 103.68243408203125,
     radius: 200,
   };
-
+  // Ensure Gestures Are Enabled
   useEffect(() => {
     navigation.setOptions({ gestureEnabled: true });
   }, []);
 
+  // Fetch Initial Location Data
   useEffect(() => {
     const fetchInitialData = async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -80,6 +80,7 @@ export default function ChildDetailScreen() {
     fetchInitialData();
   }, [childId]);
 
+  // Fetch Child Data
   const fetchChildData = async () => {
     const user = auth.currentUser;
     if (!user) return;
@@ -123,7 +124,7 @@ export default function ChildDetailScreen() {
       console.error("Error fetching detail:", err);
     }
   };
-
+  // Fetch Child Location From Backend
   const fetchChildLocationFromBackend = async () => {
     try {
       const user = auth.currentUser;
@@ -139,8 +140,13 @@ export default function ChildDetailScreen() {
       const data = await res.json();
       setChildBackendLocation(data);
 
-      const distance = calculateDistance(data, SCHOOL_LOCATION);
-      setIsPresent(distance <= SCHOOL_LOCATION.radius);
+      //Sync backend istracking state with frontend
+      if (data.istracking !== undefined) {
+        setIsTracking(data.istracking);
+      }
+
+      const distance = calculateDistance(data, SCHOOL_LOCATION); // Calculate distance from school
+      setIsPresent(distance <= SCHOOL_LOCATION.radius); // Check if child is within school radius
 
       if (data.timestamp) {
         const time = new Date(data.timestamp);
@@ -154,6 +160,7 @@ export default function ChildDetailScreen() {
   useEffect(() => {
     if (mapRef.current && location && childBackendLocation) {
       mapRef.current.fitToCoordinates(
+        // Fit map to show all markers
         [
           { latitude: location.latitude, longitude: location.longitude },
           childBackendLocation,
@@ -284,17 +291,52 @@ export default function ChildDetailScreen() {
 
         {/* Tracking Button */}
         <TouchableOpacity
-          className="bg-red-400 py-4 rounded-full mb-3"
+          className={`py-4 rounded-full mb-3 ${
+            isTracking ? "bg-danger" : "bg-primary-500"
+          }`} // Change button color based on tracking state
           onPress={async () => {
             try {
+              const user = auth.currentUser;
+              if (!user) return;
+              const token = await user.getIdToken();
+
               if (!isTracking) {
+                // Start local foreground tracking (for display)
                 await startForegroundTracking((coords) => {
                   setChildLocation(coords);
                 });
+
+                // ✅ Notify backend to start tracking
+                await fetch(`${apiURL}/location/update`, {
+                  method: "POST",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    childid: childId,
+                    latitude: location?.latitude,
+                    longitude: location?.longitude,
+                    istracking: true,
+                  }),
+                });
               } else {
+                // Stop local foreground tracking
                 await stopForegroundTracking();
                 setChildLocation(null);
+
+                // ✅ Notify backend to stop tracking
+                await fetch(`${apiURL}/location/stop`, {
+                  method: "POST",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ childid: childId }),
+                });
               }
+
+              // ✅ Flip local tracking state
               setIsTracking(!isTracking);
             } catch (err) {
               Alert.alert(

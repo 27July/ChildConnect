@@ -14,6 +14,9 @@ from fastapi import FastAPI, HTTPException, Depends, Body
 from datetime import datetime
 from firebase_admin import credentials, storage, firestore
 
+# import the routers
+from location_routes import router as location_router
+
 
 
 cloudinary.config(

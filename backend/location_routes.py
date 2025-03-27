@@ -1,12 +1,13 @@
-# ✅ location.py — Updated to match your Firestore structure
+# location_routes.py
 
-from fastapi import APIRouter, HTTPException, Body, Depends
-from datetime import datetime
+from fastapi import APIRouter, Body, HTTPException, Depends
 from firebase_admin import firestore
+from datetime import datetime
 from services.firebase_auth import get_current_user
 
 router = APIRouter()
 db = firestore.client()
+
 
 @router.post("/location/update")
 async def update_location(data: dict = Body(...), user=Depends(get_current_user)):
@@ -27,7 +28,6 @@ async def update_location(data: dict = Body(...), user=Depends(get_current_user)
 
         doc_ref = db.collection("locations").document(child_id)
 
-        # Merge update to avoid overwriting blank strings or other fields
         doc_ref.set({
             "latitude": lat,
             "longitude": lng,
@@ -46,7 +46,6 @@ async def update_location(data: dict = Body(...), user=Depends(get_current_user)
 async def stop_location_tracking(data: dict = Body(...), user=Depends(get_current_user)):
     """
     Stops location tracking for the given child by setting istracking to false.
-    Does not clear location fields.
     """
     try:
         child_id = data.get("childid")
