@@ -40,6 +40,8 @@ export default function ChildDetailScreen() {
   const [isTracking, setIsTracking] = useState(false);
   const [isPresent, setIsPresent] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [locationIntervalId, setLocationIntervalId] =
+    useState<NodeJS.Timeout | null>(null);
 
   const mapRef = React.useRef<MapView | null>(null);
 
@@ -174,6 +176,15 @@ export default function ChildDetailScreen() {
     }
   }, [location, childBackendLocation]);
 
+  useEffect(() => {
+    return () => {
+      if (locationIntervalId) {
+        clearInterval(locationIntervalId);
+        console.log("✅ Cleared location interval on unmount");
+      }
+    };
+  }, [locationIntervalId]);
+
   if (loading) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center bg-white">
@@ -213,7 +224,7 @@ export default function ChildDetailScreen() {
         }}
         onPress={() => {
           router.push({
-            pathname: "../../(child)/[id]",
+            pathname: "../../(childmode)/[id]",
             params: { id: childId },
           });
         }}
@@ -301,12 +312,12 @@ export default function ChildDetailScreen() {
               const token = await user.getIdToken();
 
               if (!isTracking) {
-                // Start local foreground tracking (for display)
+                // Start local foreground tracking
                 await startForegroundTracking((coords) => {
                   setChildLocation(coords);
                 });
 
-                // ✅ Notify backend to start tracking
+                // Notify backend to start tracking
                 await fetch(`${apiURL}/location/update`, {
                   method: "POST",
                   headers: {
@@ -320,12 +331,19 @@ export default function ChildDetailScreen() {
                     istracking: true,
                   }),
                 });
+
+                // Immediately refresh map and start polling every 16s
+                await fetchChildLocationFromBackend();
+                const interval = setInterval(
+                  fetchChildLocationFromBackend,
+                  16000
+                );
+                setLocationIntervalId(interval);
               } else {
-                // Stop local foreground tracking
+                // Stop tracking
                 await stopForegroundTracking();
                 setChildLocation(null);
 
-                // ✅ Notify backend to stop tracking
                 await fetch(`${apiURL}/location/stop`, {
                   method: "POST",
                   headers: {
@@ -334,9 +352,14 @@ export default function ChildDetailScreen() {
                   },
                   body: JSON.stringify({ childid: childId }),
                 });
+
+                // Stop polling
+                if (locationIntervalId) {
+                  clearInterval(locationIntervalId);
+                  setLocationIntervalId(null);
+                }
               }
 
-              // ✅ Flip local tracking state
               setIsTracking(!isTracking);
             } catch (err) {
               Alert.alert(
@@ -382,13 +405,6 @@ export default function ChildDetailScreen() {
                 title="School"
                 pinColor="orange"
               />
-              {childLocation && (
-                <Marker
-                  coordinate={childLocation}
-                  title="Child Device"
-                  pinColor="purple"
-                />
-              )}
             </MapView>
           ) : (
             <Text className="text-center text-red-500 mt-4">

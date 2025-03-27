@@ -46,10 +46,42 @@ export default function ChildModeScreen() {
     const db = getFirestore();
     const docRef = doc(db, "locations", childId);
 
+    let trackingStarted = false; // prevent multiple triggers
+
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        setIsTracking(data.istracking === true);
+        const newTrackingStatus = data.istracking === true;
+
+        // If tracking just switched ON
+        if (newTrackingStatus && !trackingStarted) {
+          trackingStarted = true;
+          setIsTracking(true);
+          startForegroundTracking(async (coords) => {
+            const token = await auth.currentUser?.getIdToken();
+
+            await fetch(`http://${ip}:8000/location/update`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                childid: childId,
+                latitude: coords.latitude,
+                longitude: coords.longitude,
+                istracking: true,
+              }),
+            });
+          });
+        }
+
+        // If tracking is turned off
+        if (!newTrackingStatus) {
+          trackingStarted = false;
+          stopForegroundTracking();
+          setIsTracking(false);
+        }
       }
     });
 
