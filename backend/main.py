@@ -583,3 +583,55 @@ def get_other_user_profile(chat_id: str, user=Depends(get_current_user)):
         return other_user_doc.to_dict()
     else:
         raise HTTPException(status_code=404, detail="User not found")
+
+@app.get("/childrenof/{user_id}")
+def get_children_of_user(user_id: str, user=Depends(get_current_user)):
+    # Query 1: where fatherid == user_id
+    father_query = db.collection("children").where("fatherid", "==", user_id).stream()
+    # Query 2: where motherid == user_id
+    mother_query = db.collection("children").where("motherid", "==", user_id).stream()
+
+    children = []
+    seen = set()
+
+    for child in father_query:
+        data = child.to_dict()
+        data["id"] = child.id
+        children.append(data)
+        seen.add(child.id)
+
+    for child in mother_query:
+        if child.id not in seen:
+            data = child.to_dict()
+            data["id"] = child.id
+            children.append(data)
+
+    return children
+
+@app.get("/classesof/{user_id}")
+def get_classes_of_user(user_id: str, user=Depends(get_current_user)):
+    print(f"🔍 Looking for classes for user ID: {user_id}")
+    classes_ref = db.collection("class")
+
+    form_teacher_query = classes_ref.where("teacherId", "==", user_id).stream()
+    sub_teacher_query = classes_ref.where("subteachers", "array_contains", user_id).stream()
+
+    result = []
+    seen = set()
+
+    for doc in form_teacher_query:
+        data = doc.to_dict()
+        data["id"] = doc.id
+        data["role"] = "Form Teacher"
+        result.append(data)
+        seen.add(doc.id)
+
+    for doc in sub_teacher_query:
+        if doc.id not in seen:
+            data = doc.to_dict()
+            data["id"] = doc.id
+            data["role"] = "Teacher"
+            result.append(data)
+
+    print(f"📦 Total classes returned for {user_id}: {len(result)}")
+    return result

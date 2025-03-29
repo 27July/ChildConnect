@@ -29,13 +29,56 @@ export default function ChatList() {
     const user = auth.currentUser;
     if (!user) return;
     const token = await user.getIdToken();
+    const myUserId = user.uid;
 
     try {
       const res = await fetch(`${apiURL}/findchats`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      const sorted = data.sort((a, b) => {
+
+      // Get my children
+      const myChildrenRes = await fetch(`${apiURL}/mychildren`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const myChildren = await myChildrenRes.json();
+      const myChildrenByClass = {};
+      myChildren.forEach(child => {
+        if (!myChildrenByClass[child.class]) {
+          myChildrenByClass[child.class] = [];
+        }
+        myChildrenByClass[child.class].push(child.name);
+      });
+
+      const enrichedChats = await Promise.all(
+        data.map(async (chat) => {
+          const otherUserId =
+            chat.userID1 === myUserId ? chat.userID2 : chat.userID1;
+
+          try {
+            // Fetch the teacher's classes
+            const classesRes = await fetch(`${apiURL}/classesof/${otherUserId}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const teacherClasses = await classesRes.json();
+            const classNames = teacherClasses.map(c => c.name);
+
+            // Filter my children who are in this teacher's class
+            const relevantChildren = Object.entries(myChildrenByClass)
+              .filter(([className]) => classNames.includes(className))
+              .flatMap(([_, names]) => names);
+
+            chat.childNames = relevantChildren;
+            return chat;
+          } catch (err) {
+            console.error("Error fetching teacher's classes:", err);
+            chat.childNames = [];
+            return chat;
+          }
+        })
+      );
+
+      const sorted = enrichedChats.sort((a, b) => {
         const aTime = a.lastUpdated?._seconds || new Date(a.lastUpdated).getTime() / 1000;
         const bTime = b.lastUpdated?._seconds || new Date(b.lastUpdated).getTime() / 1000;
         return bTime - aTime;
@@ -67,29 +110,33 @@ export default function ChatList() {
   };
 
   const renderChatItem = ({ item }) => {
-    const otherUser =
-      item.userID1 === auth.currentUser.uid ? item.userID2 : item.userID1;
-
     return (
       <TouchableOpacity
         onPress={() =>
           router.push({ pathname: "/chat/[id]", params: { id: item.id } })
         }
-        className="bg-white rounded-xl p-4 mb-3 shadow-sm border border-primary-100 flex-row items-center"
+        className="bg-white rounded-2xl p-4 mb-3 shadow-sm border border-primary-100 flex-row items-center"
       >
         {renderProfileImage(item.otherUserPic)}
         <View className="ml-4 flex-1">
-          <View className="flex-row justify-between items-center">
-            <Text className="text-lg font-semibold text-primary-400">
-              {item.otherUserName}
-            </Text>
+          <View className="flex-row justify-between items-start">
+            <View className="flex-1 pr-2">
+              <Text className="text-base font-semibold text-primary-400">
+                Chatting with {item.otherUserName}
+              </Text>
+              {item.childNames?.length > 0 && (
+                <Text className="text-sm text-gray-500 mt-0.5">
+                  Teacher of {item.childNames.join(", ")}
+                </Text>
+              )}
+            </View>
             {!item.isRead && (
               <View className="bg-primary-400 px-2 py-0.5 rounded-full">
                 <Text className="text-white text-xs">New</Text>
               </View>
             )}
           </View>
-          <Text className="text-gray-600 mt-1" numberOfLines={1}>
+          <Text className="text-gray-600 mt-1 text-sm" numberOfLines={1}>
             {item.lastMessage || "No messages yet."}
           </Text>
           <Text className="text-xs text-gray-400 mt-1">

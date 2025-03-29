@@ -16,16 +16,36 @@ import ProfilePic from "@/assets/images/profilepic.svg";
 export default function ChatList() {
   const [loading, setLoading] = useState(true);
   const [chats, setChats] = useState([]);
+  const [classNames, setClassNames] = useState([]);
   const router = useRouter();
   const apiURL = `http://${ip}:8000`;
 
   useFocusEffect(
     useCallback(() => {
-      fetchChats();
+      fetchMyClasses();
     }, [])
   );
 
-  const fetchChats = async () => {
+  const fetchMyClasses = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    const token = await user.getIdToken();
+
+    try {
+      const res = await fetch(`${apiURL}/myclasses`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const classes = await res.json();
+      const classNames = classes.map((c) => c.name);
+      setClassNames(classNames);
+      fetchChats(classNames);
+    } catch (err) {
+      console.error("Error loading my classes:", err);
+      setLoading(false);
+    }
+  };
+
+  const fetchChats = async (myClassNames) => {
     const user = auth.currentUser;
     if (!user) return;
     const token = await user.getIdToken();
@@ -35,7 +55,33 @@ export default function ChatList() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      const sorted = data.sort((a, b) => {
+
+      const enrichedChats = await Promise.all(
+        data.map(async (chat) => {
+          const otherUserId =
+            chat.userID1 === user.uid ? chat.userID2 : chat.userID1;
+
+          try {
+            const childrenRes = await fetch(`${apiURL}/childrenof/${otherUserId}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const children = await childrenRes.json();
+
+            const relevantChildren = children.filter((child) =>
+              myClassNames.includes(child.class)
+            );
+
+            chat.childNames = relevantChildren.map((child) => child.name);
+            return chat;
+          } catch (err) {
+            console.error("Error fetching children of other user:", err);
+            chat.childNames = [];
+            return chat;
+          }
+        })
+      );
+
+      const sorted = enrichedChats.sort((a, b) => {
         const aTime = a.lastUpdated?._seconds || new Date(a.lastUpdated).getTime() / 1000;
         const bTime = b.lastUpdated?._seconds || new Date(b.lastUpdated).getTime() / 1000;
         return bTime - aTime;
@@ -67,29 +113,33 @@ export default function ChatList() {
   };
 
   const renderChatItem = ({ item }) => {
-    const otherUser =
-      item.userID1 === auth.currentUser.uid ? item.userID2 : item.userID1;
-
     return (
       <TouchableOpacity
         onPress={() =>
           router.push({ pathname: "/chat/[id]", params: { id: item.id } })
         }
-        className="bg-white rounded-xl p-4 mb-3 shadow-sm border border-primary-100 flex-row items-center"
+        className="bg-white rounded-2xl p-4 mb-3 shadow-sm border border-primary-100 flex-row items-center"
       >
         {renderProfileImage(item.otherUserPic)}
         <View className="ml-4 flex-1">
           <View className="flex-row justify-between items-center">
-            <Text className="text-lg font-semibold text-primary-400">
-              {item.otherUserName}
-            </Text>
+            <View className="flex-1 pr-2">
+              <Text className="text-base font-semibold text-primary-400">
+                Chatting with {item.otherUserName}
+              </Text>
+              {item.childNames?.length > 0 && (
+                <Text className="text-sm text-gray-500 mt-0.5">
+                  Parent of {item.childNames.join(", ")}
+                </Text>
+              )}
+            </View>
             {!item.isRead && (
               <View className="bg-primary-400 px-2 py-0.5 rounded-full">
                 <Text className="text-white text-xs">New</Text>
               </View>
             )}
           </View>
-          <Text className="text-gray-600 mt-1" numberOfLines={1}>
+          <Text className="text-gray-600 mt-1 text-sm" numberOfLines={1}>
             {item.lastMessage || "No messages yet."}
           </Text>
           <Text className="text-xs text-gray-400 mt-1">
