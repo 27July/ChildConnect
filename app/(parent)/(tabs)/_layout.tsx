@@ -62,15 +62,6 @@ export default function ParentTabLayout() {
             }}
           />
           <Tabs.Screen
-            name="schools"
-            options={{
-              title: "School",
-              tabBarIcon: ({ color, size }) => (
-                <School color={color} size={size} />
-              ),
-            }}
-          />
-          <Tabs.Screen
             name="profile"
             options={{
               title: "Profile",
