@@ -1,183 +1,120 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
-  FlatList,
-  TextInput,
   TouchableOpacity,
-  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  Image,
 } from "react-native";
-import { FontAwesome5, Feather } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter, useFocusEffect } from "expo-router";
+import { auth } from "@/firebaseConfig";
+import { ip } from "@/utils/server_ip.json";
+import ProfilePic from "@/assets/images/profilepic.svg";
 
-// ✅ Sample Chat Data
-const chats = [
-  {
-    id: "1",
-    name: "Class 1E4",
-    lastMessage: "Reminder: Test on Monday!",
-    time: "2h ago",
-  },
-  {
-    id: "2",
-    name: "Class 2K2",
-    lastMessage: "Homework submission deadline?",
-    time: "4h ago",
-  },
-  {
-    id: "3",
-    name: "Staff Room",
-    lastMessage: "Meeting at 3 PM.",
-    time: "1 day ago",
-  },
-  {
-    id: "4",
-    name: "Parent-Teacher Chat",
-    lastMessage: "Can we schedule a meeting?",
-    time: "2 days ago",
-  },
-  {
-    id: "5",
-    name: "Science Department",
-    lastMessage: "Lab materials update",
-    time: "3 days ago",
-  },
-];
-
-const ChatsList = () => {
-  const [searchQuery, setSearchQuery] = useState("");
+export default function ChatList() {
+  const [loading, setLoading] = useState(true);
+  const [chats, setChats] = useState([]);
   const router = useRouter();
+  const apiURL = `http://${ip}:8000`;
 
-  const filteredChats = chats.filter((chat) =>
-    chat.name.toLowerCase().includes(searchQuery.toLowerCase())
+  useFocusEffect(
+    useCallback(() => {
+      fetchChats();
+    }, [])
   );
+
+  const fetchChats = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    const token = await user.getIdToken();
+
+    try {
+      const res = await fetch(`${apiURL}/findchats`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      const sorted = data.sort((a, b) => {
+        const aTime = a.lastUpdated?._seconds || new Date(a.lastUpdated).getTime() / 1000;
+        const bTime = b.lastUpdated?._seconds || new Date(b.lastUpdated).getTime() / 1000;
+        return bTime - aTime;
+      });
+      setChats(sorted);
+    } catch (err) {
+      console.error("Error loading chats:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatTimestamp = (ts) => {
+    if (!ts) return "-";
+    if (typeof ts === "string") {
+      return new Date(ts).toLocaleString();
+    }
+    if (ts._seconds) {
+      return new Date(ts._seconds * 1000).toLocaleString();
+    }
+    return "-";
+  };
+
+  const renderProfileImage = (uri) => {
+    if (!uri || uri.trim() === "") {
+      return <ProfilePic width={40} height={40} />;
+    }
+    return <Image source={{ uri }} className="w-10 h-10 rounded-full" />;
+  };
+
+  const renderChatItem = ({ item }) => {
+    const otherUser =
+      item.userID1 === auth.currentUser.uid ? item.userID2 : item.userID1;
+
+    return (
+      <TouchableOpacity
+        onPress={() =>
+          router.push({ pathname: "/chat/[id]", params: { id: item.id } })
+        }
+        className="bg-white rounded-xl p-4 mb-3 shadow-sm border border-primary-100 flex-row items-center"
+      >
+        {renderProfileImage(item.otherUserPic)}
+        <View className="ml-4 flex-1">
+          <View className="flex-row justify-between items-center">
+            <Text className="text-lg font-semibold text-primary-400">
+              {item.otherUserName}
+            </Text>
+            {!item.isRead && (
+              <View className="bg-primary-400 px-2 py-0.5 rounded-full">
+                <Text className="text-white text-xs">New</Text>
+              </View>
+            )}
+          </View>
+          <Text className="text-gray-600 mt-1" numberOfLines={1}>
+            {item.lastMessage || "No messages yet."}
+          </Text>
+          <Text className="text-xs text-gray-400 mt-1">
+            {formatTimestamp(item.lastUpdated)}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.headerTitle}>Chats</Text>
-
-      <View style={styles.searchContainer}>
-        <Feather
-          name="search"
-          size={16}
-          color="#8E8E8E"
-          style={styles.searchIcon}
+    <SafeAreaView className="flex-1 bg-primary-50 px-5">
+      <Text className="text-3xl font-extrabold text-[#2A2E43] mt-6 mb-4">
+        Chats
+      </Text>
+      {loading ? (
+        <ActivityIndicator size="large" color="#999" />
+      ) : (
+        <FlatList
+          data={chats}
+          keyExtractor={(item) => item.id}
+          renderItem={renderChatItem}
+          contentContainerStyle={{ paddingBottom: 20 }}
         />
-        <TextInput
-          style={styles.searchBar}
-          placeholder="Search for a chat..."
-          placeholderTextColor="#8E8E8E"
-          onChangeText={(text) => setSearchQuery(text)}
-        />
-      </View>
-
-      <FlatList
-        data={filteredChats}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.chatList}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.chatItem}
-            onPress={() => router.push("../chat/chatpage")}
-          >
-            <View style={styles.chatIcon}>
-              <FontAwesome5 name="comments" size={20} color="#fff" />
-            </View>
-
-            <View style={styles.chatInfo}>
-              <Text style={styles.chatName}>{item.name}</Text>
-              <Text style={styles.lastMessage}>{item.lastMessage}</Text>
-            </View>
-
-            <Text style={styles.timestamp}>{item.time}</Text>
-          </TouchableOpacity>
-        )}
-      />
-    </View>
+      )}
+    </SafeAreaView>
   );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f6fff8",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1E3765",
-    marginBottom: 10,
-    paddingBottom: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  searchIcon: {
-    marginRight: 6,
-  },
-  searchBar: {
-    flex: 1,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: "#333",
-  },
-  chatList: {
-    paddingBottom: 20,
-  },
-  chatItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    paddingVertical: 14,
-    paddingHorizontal: 15,
-    borderRadius: 12,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 1,
-    elevation: 1,
-  },
-  chatIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: "#6C9BCF",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  chatInfo: {
-    flex: 1,
-  },
-  chatName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1E3765",
-    marginBottom: 2,
-  },
-  lastMessage: {
-    fontSize: 13,
-    color: "#555",
-  },
-  timestamp: {
-    fontSize: 11,
-    color: "#999",
-  },
-});
-
-export default ChatsList;
+}
