@@ -121,23 +121,29 @@ export default function Profile() {
         </View>
 
         {/* 🔹 Profile Fields */}
-        {["name", "email", "phone", "workPhone", "address"].map((field) => (
-          <View key={field} className="mb-3">
-            <Text className="text-gray-600 mb-1 capitalize">{field}</Text>
-            <TextInput
-              editable={field !== "name" && field !== "email" && editing}
-              value={editableUserData[field] || ""}
-              onChangeText={(val) =>
-                setEditableUserData((prev: any) => ({ ...prev, [field]: val }))
-              }
-              className={`bg-white px-4 py-3 rounded-xl ${
-                editing && field !== "name" && field !== "email"
-                  ? "border border-primary-400"
-                  : "text-gray-800"
-              }`}
-            />
-          </View>
-        ))}
+        {["name", "email", "phone", "workPhone", "address"].map((field) => {
+          const isReadOnly = field === "name" || field === "email";
+          return (
+            <View key={field} className="mb-3">
+              <Text className="text-gray-600 mb-1 capitalize">{field}</Text>
+              <TextInput
+                editable={!isReadOnly && editing}
+                value={editableUserData[field] || ""}
+                onChangeText={(val) =>
+                  setEditableUserData((prev: any) => ({ ...prev, [field]: val }))
+                }
+                className={`px-4 py-3 rounded-xl ${
+                  isReadOnly
+                    ? "bg-primary-50 text-gray-500"
+                    : editing
+                    ? "bg-white border border-primary-400"
+                    : "bg-white text-gray-800"
+                }`}
+              />
+            </View>
+          );
+        })}
+
 
         {editing && (
           <TouchableOpacity
