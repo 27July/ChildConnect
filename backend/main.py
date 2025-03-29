@@ -608,30 +608,39 @@ def get_children_of_user(user_id: str, user=Depends(get_current_user)):
 
     return children
 
-@app.get("/classesof/{user_id}")
-def get_classes_of_user(user_id: str, user=Depends(get_current_user)):
-    print(f"🔍 Looking for classes for user ID: {user_id}")
-    classes_ref = db.collection("class")
+@app.get("/class/{class_id}/children")
+def get_children_of_class(class_id: str, user=Depends(get_current_user)):
+    class_doc = db.collection("class").document(class_id).get()
+    if not class_doc.exists:
+        raise HTTPException(status_code=404, detail="Class not found")
 
-    form_teacher_query = classes_ref.where("teacherId", "==", user_id).stream()
-    sub_teacher_query = classes_ref.where("subteachers", "array_contains", user_id).stream()
+    class_data = class_doc.to_dict()
+    child_ids = class_data.get("children", [])
+    children_data = []
 
-    result = []
-    seen = set()
+    for child_id in child_ids:
+        child_doc = db.collection("children").document(child_id).get()
+        if child_doc.exists:
+            children_data.append({**child_doc.to_dict(), "id": child_doc.id})
 
-    for doc in form_teacher_query:
-        data = doc.to_dict()
-        data["id"] = doc.id
-        data["role"] = "Form Teacher"
-        result.append(data)
-        seen.add(doc.id)
+    return children_data
 
-    for doc in sub_teacher_query:
-        if doc.id not in seen:
-            data = doc.to_dict()
-            data["id"] = doc.id
-            data["role"] = "Teacher"
-            result.append(data)
+@app.get("/attendance-for-date/{date}")
+def get_attendance_for_date(date: str, user=Depends(get_current_user)):
+    doc = db.collection("attendance").document(date).get()
+    if not doc.exists:
+        return []
 
-    print(f"📦 Total classes returned for {user_id}: {len(result)}")
-    return result
+    data = doc.to_dict()
+    children = data.get("children", [])
+    images = data.get("childrenimage", [])
+
+    results = []
+    for index, cid in enumerate(children):
+        results.append({
+            "childid": cid,
+            "present": True,
+            "image": images[index] if index < len(images) else "null"
+        })
+
+    return results
