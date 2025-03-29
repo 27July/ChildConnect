@@ -14,10 +14,13 @@ from fastapi import FastAPI, HTTPException, Depends, Body
 from datetime import datetime
 from firebase_admin import credentials, storage, firestore
 
+
 # import the routers
 from location_routes import router as location_router
 from homework_route import router as homework_router
 from schools_route import router as schools_router
+from schoolofchild_route import router as school_of_child_router
+
 
 
 
@@ -43,11 +46,13 @@ db = firestore.client()
 
 preload_school_data()
 
-
+#External Routers
 app = FastAPI()
 app.include_router(location_router)
 app.include_router(schools_router)
 app.include_router(homework_router)
+app.include_router(school_of_child_router)
+
 
 
 # ✅ Enable CORS for Expo & Web Access

@@ -247,12 +247,26 @@ export default function ChildDetailScreen() {
         <Text className="text-xl font-bold text-center text-[#2A2E43]">
           {child.name}
         </Text>
-        <Text className="text-center text-[#2A2E43] mt-1">{child.school}</Text>
-        <Text className="text-center text-[#2A2E43] mt-1">
-          Class: {child.class} Grade: {child.grade}
-        </Text>
 
-        <View className="bg-[#C6E3DE] px-4 py-3 rounded-full mt-5 mb-4">
+        {/* School Details Button */}
+        <TouchableOpacity
+          className="bg-[#C6E3DE] px-4 py-2 rounded-full mt-2"
+          onPress={() =>
+            router.push({
+              pathname: "../../profile/schoolinfo",
+              params: { id: childId },
+            })
+          }
+        >
+          <Text className="text-center text-[#2A2E43] mt-1">
+            {child.school}
+          </Text>
+          <Text className="text-center text-[#2A2E43] mt-1">
+            Class: {child.class} Grade: {child.grade}
+          </Text>
+        </TouchableOpacity>
+
+        <View className="bg-[#C6E3DE] px-4 py-3 rounded-full mt-3 mb-4">
           <Text className="text-center font-bold text-[#2A2E43]">
             Today's Attendance:{" "}
             <Text className="text-[#00B6AC]">
