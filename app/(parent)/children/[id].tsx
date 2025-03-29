@@ -259,11 +259,6 @@ export default function ChildDetailScreen() {
               {isPresent ? "Present" : "Absent"}
             </Text>
           </Text>
-          {lastUpdated && (
-            <Text className="text-center text-xs text-gray-500 mt-1">
-              Last updated: {lastUpdated}
-            </Text>
-          )}
         </View>
 
         {teachers.map((teacher, idx) => (
@@ -377,6 +372,13 @@ export default function ChildDetailScreen() {
           </Text>
         </TouchableOpacity>
 
+        <View className="flex-row items-center justify-center mb-3">
+          {lastUpdated && (
+            <Text className="text-center text-sm text-gray-500 mt-1">
+              Last updated: {lastUpdated}
+            </Text>
+          )}
+        </View>
         {/* Map */}
         <View
           style={{ height: 300 }}
