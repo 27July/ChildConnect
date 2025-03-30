@@ -14,19 +14,12 @@ from fastapi import HTTPException, Depends, Body
 from datetime import datetime
 from firebase_admin import credentials, storage, firestore
 
-<<<<<<< HEAD
-=======
-
 # import the routers
 from location_routes import router as location_router
 from homework_route import router as homework_router
 from schools_route import router as schools_router
 from schoolofchild_route import router as school_of_child_router
 
-
-
-
->>>>>>> keerthimain
 cloudinary.config(
     cloud_name="dqatmjayu",
     api_key="834117339387158",
@@ -45,10 +38,7 @@ db = firestore.client()
 
 preload_school_data()
 
-<<<<<<< HEAD
-=======
 #External Routers
->>>>>>> keerthimain
 app = FastAPI()
 app.include_router(location_router)
 app.include_router(schools_router)
