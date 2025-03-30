@@ -10,26 +10,20 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from services.firebase_auth import get_current_user  # ✅ Firebase authentication
 from services.schoolsapi import preload_school_data
-from fastapi import FastAPI, HTTPException, Depends, Body
+from fastapi import HTTPException, Depends, Body
 from datetime import datetime
 from firebase_admin import credentials, storage, firestore
 
-
-
 cloudinary.config(
-    cloud_name="dqatmjayu",       # replace this
-    api_key="834117339387158",             # replace this
-    api_secret="i7DlGpun3n5836ecuvyXZe3Buiw"        # replace this
+    cloud_name="dqatmjayu",
+    api_key="834117339387158",
+    api_secret="i7DlGpun3n5836ecuvyXZe3Buiw"
 )
 
+PROJECT_ID = "childconnect-1eacf"
 
-
-# ✅ Replace with your actual project ID
-PROJECT_ID = "childconnect-1eacf"  # <--- 🔁 Replace this with your actual Firebase Project ID
-
-# ✅ Initialize Firebase Admin with Storage
 if not firebase_admin._apps:
-    cred = credentials.Certificate("serviceAccountKey.json")  # Path to your service account key
+    cred = credentials.Certificate("serviceAccountKey.json")
     firebase_admin.initialize_app(cred, {
         "storageBucket": f"{PROJECT_ID}.appspot.com"
     })
@@ -38,43 +32,44 @@ db = firestore.client()
 
 preload_school_data()
 
-
 app = FastAPI()
 
-
-# ✅ Enable CORS for Expo & Web Access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins (Change in production)
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-
-# ✅ Function to get the local IP of the FastAPI server
+# ✅ Improved: Get actual local IP instead of 127.0.0.1
 def get_local_ip():
-    hostname = socket.gethostname()
-    return socket.gethostbyname(hostname)
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
 
-# ✅ Save the IP to server_ip.json inside the Expo frontend's utils folder
+# ✅ (Optional dev) Write IP to project folder's server_ip.json
 def save_ip_to_file():
     ip_data = {"ip": get_local_ip()}
-
-    # ✅ Change this to match your frontend's path
     frontend_utils_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../utils/server_ip.json"))
-
-    # ✅ Overwrite server_ip.json every time FastAPI starts
     with open(frontend_utils_path, "w") as file:
         json.dump(ip_data, file)
-
     print(f"✅ Server IP saved to frontend: {frontend_utils_path} -> {ip_data['ip']}")
 
-# ✅ Run this function when FastAPI starts
+# ✅ Save IP once when FastAPI starts
 save_ip_to_file()
 
-# ✅ API to get the IP (For debugging)
+# ✅ New: Expo app can fetch IP from here
+@app.get("/server-ip")
+def server_ip():
+    return {"ip": get_local_ip()}
+
+# ✅ Debug route for local file-based IP
 @app.get("/get-ip")
 async def get_ip():
     try:
