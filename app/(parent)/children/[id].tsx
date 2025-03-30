@@ -15,7 +15,7 @@ import { auth } from "@/firebaseConfig";
 import { ip } from "@/utils/server_ip.json";
 import ProfilePic from "../../../assets/images/profilepic.svg";
 import { useRouter } from "expo-router";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker, Callout } from "react-native-maps";
 import { FontAwesome5 } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { calculateDistance } from "../../../components/calculateDistance";
@@ -24,6 +24,11 @@ import {
   stopForegroundTracking,
 } from "../../../components/ChildLocationTracker";
 import { ShieldUser } from "lucide-react-native";
+
+// Custom pin images
+const childPin = require("../../../assets/map_pins/child-pin.png");
+const parentPin = require("../../../assets/map_pins/parent-pin.png");
+const schoolPin = require("../../../assets/map_pins/school-pin.png");
 
 export default function ChildDetailScreen() {
   const { id: childId } = useLocalSearchParams();
@@ -393,44 +398,118 @@ export default function ChildDetailScreen() {
             </Text>
           )}
         </View>
-        {/* Map */}
-        <View
-          style={{ height: 300 }}
-          className="rounded-xl overflow-hidden bg-gray-300"
+
+        {/* Map with interactive markers */}
+        <TouchableOpacity
+          activeOpacity={0.9}
+          // onPress={() => {
+          //   router.push({
+          //     pathname: "../../(childmode)/MapFullScreen",
+          //     params: {
+          //       childLat: childBackendLocation.latitude,
+          //       childLng: childBackendLocation.longitude,
+          //       userLat: location.latitude,
+          //       userLng: location.longitude,
+          //       schoolLat: 1.3462227582931519,
+          //       schoolLng: 103.68243408203125,
+          //     },
+          //   });
+          // }}
         >
-          {childBackendLocation && location ? (
-            <MapView
-              ref={mapRef}
-              style={{ flex: 1 }}
-              initialRegion={{
-                latitude: childBackendLocation.latitude,
-                longitude: childBackendLocation.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-              }}
-            >
-              <Marker
-                coordinate={childBackendLocation}
-                title="Child's Location"
-                pinColor="blue"
-              />
-              <Marker
-                coordinate={location}
-                title="Your Location"
-                pinColor="green"
-              />
-              <Marker
-                coordinate={SCHOOL_LOCATION}
-                title="School"
-                pinColor="orange"
-              />
-            </MapView>
-          ) : (
-            <Text className="text-center text-red-500 mt-4">
-              Unable to fetch locations
-            </Text>
-          )}
-        </View>
+          <View
+            style={{ height: 300 }}
+            className="rounded-xl overflow-hidden bg-gray-300"
+          >
+            {childBackendLocation && location ? (
+              <MapView
+                ref={mapRef}
+                style={{ flex: 1 }}
+                initialRegion={{
+                  latitude: childBackendLocation.latitude,
+                  longitude: childBackendLocation.longitude,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                }}
+              >
+                <Marker coordinate={childBackendLocation}>
+                  <View
+                    style={{
+                      backgroundColor: "white",
+                      padding: 6,
+                      borderRadius: 999,
+                      elevation: 5, // Android shadow
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 3.5,
+                    }}
+                  >
+                    <Image
+                      source={childPin}
+                      style={{ width: 40, height: 40 }}
+                      resizeMode="contain"
+                    />
+                  </View>
+                  <Callout>
+                    <Text>{child?.name || "Child"}</Text>
+                  </Callout>
+                </Marker>
+
+                <Marker coordinate={location}>
+                  <View
+                    style={{
+                      backgroundColor: "white",
+                      padding: 6,
+                      borderRadius: 999,
+                      elevation: 5,
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 3.5,
+                    }}
+                  >
+                    <Image
+                      source={parentPin}
+                      style={{ width: 40, height: 40 }}
+                      resizeMode="contain"
+                    />
+                  </View>
+                  <Callout>
+                    <Text>You</Text>
+                  </Callout>
+                </Marker>
+
+                <Marker coordinate={SCHOOL_LOCATION}>
+                  <View
+                    style={{
+                      backgroundColor: "white",
+                      padding: 6,
+                      borderRadius: 999,
+                      elevation: 5,
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 3.5,
+                    }}
+                  >
+                    <Image
+                      source={schoolPin}
+                      style={{ width: 40, height: 40 }}
+                      resizeMode="contain"
+                    />
+                  </View>
+                  <Callout>
+                    <Text>School</Text>
+                  </Callout>
+                </Marker>
+              </MapView>
+            ) : (
+              <Text className="text-center text-red-500 mt-4">
+                Unable to fetch locations
+              </Text>
+            )}
+          </View>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
