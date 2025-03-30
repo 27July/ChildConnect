@@ -1,3 +1,6 @@
+// Purpose: This file contains the code for the ChildLocationTracker component, which is used to track the location of the child user.
+// It uses the Expo Location API to track the location of the device in the foreground.
+
 import * as Location from "expo-location";
 
 let locationSubscription: Location.LocationSubscription | null = null;
@@ -8,6 +11,9 @@ let locationSubscription: Location.LocationSubscription | null = null;
  * @param onLocationUpdate - Callback to receive updated location.
  * @param intervalMs - How often to get location updates (default: 10 seconds).
  */
+
+let isTracking = false;
+
 export const startForegroundTracking = async (
   onLocationUpdate: (location: Location.LocationObjectCoords) => void,
   intervalMs: number = 10000

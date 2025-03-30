@@ -6,6 +6,10 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  Keyboard,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -69,52 +73,59 @@ export default function DocumentationForm() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-primary-50 p-5">
-      <Text className="text-2xl font-bold text-center mb-5">
-        Add Documentation
-      </Text>
-
-      <TextInput
-        className="bg-white rounded-xl px-4 py-3 mb-4"
-        placeholder="Title"
-        placeholderTextColor="#999"
-        value={title}
-        onChangeText={setTitle}
-      />
-
-      <TextInput
-        className="bg-white rounded-xl px-4 py-3 mb-4"
-        placeholder="Content"
-        placeholderTextColor="#999"
-        value={content}
-        onChangeText={setContent}
-        multiline
-        numberOfLines={4}
-      />
-
-      <TouchableOpacity
-        className="bg-primary-400 py-3 rounded-xl mb-3"
-        onPress={pickImage}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <Text className="text-white text-center font-bold">
-          {image ? "Change Image" : "Upload Image"}
-        </Text>
-      </TouchableOpacity>
+        <SafeAreaView className="flex-1 bg-primary-50 p-5">
+          <Text className="text-2xl font-bold text-center mb-5">
+            Add Documentation
+          </Text>
 
-      {image && (
-        <Image
-          source={{ uri: image }}
-          className="w-full h-48 rounded-xl mb-4"
-          resizeMode="cover"
-        />
-      )}
+          <TextInput
+            className="bg-white rounded-xl px-4 py-3 mb-4"
+            placeholder="Title"
+            placeholderTextColor="#999"
+            value={title}
+            onChangeText={setTitle}
+          />
 
-      <TouchableOpacity
-        className="bg-[#2A2E43] py-3 rounded-xl mt-3"
-        onPress={handleSubmit}
-      >
-        <Text className="text-white text-center font-bold">Submit</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+          <TextInput
+            className="bg-white rounded-xl px-4 py-3 mb-4"
+            placeholder="Content"
+            placeholderTextColor="#999"
+            value={content}
+            onChangeText={setContent}
+            multiline
+            numberOfLines={4}
+          />
+
+          <TouchableOpacity
+            className="bg-primary-400 py-3 rounded-xl mb-3"
+            onPress={pickImage}
+          >
+            <Text className="text-white text-center font-bold">
+              {image ? "Change Image" : "Upload Image"}
+            </Text>
+          </TouchableOpacity>
+
+          {image && (
+            <Image
+              source={{ uri: image }}
+              className="w-full h-48 rounded-xl mb-4"
+              resizeMode="cover"
+            />
+          )}
+
+          <TouchableOpacity
+            className="bg-[#2A2E43] py-3 rounded-xl mt-3"
+            onPress={handleSubmit}
+          >
+            <Text className="text-white text-center font-bold">Submit</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 }

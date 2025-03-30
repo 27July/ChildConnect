@@ -10,18 +10,22 @@ import {
   Modal,
   Dimensions,
 } from "react-native";
-import { useRouter, useNavigation } from "expo-router";
-import { FontAwesome5 } from "@expo/vector-icons";
+import { useRouter, useNavigation, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   startForegroundTracking,
   stopForegroundTracking,
-} from "../../../components/ChildLocationTracker";
+} from "../../components/ChildLocationTracker";
+import { auth } from "@/firebaseConfig";
+import { ip } from "@/utils/server_ip.json";
+import { useFocusEffect } from "@react-navigation/native";
+import { getFirestore, doc, onSnapshot, updateDoc } from "firebase/firestore";
 
 const PRESET_EXIT_CODE = "1234";
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
 export default function ChildModeScreen() {
+  const { id: childId } = useLocalSearchParams();
   const router = useRouter();
   const navigation = useNavigation();
   const [homeworkList, setHomeworkList] = useState([]);
@@ -29,81 +33,166 @@ export default function ChildModeScreen() {
   const [exitCode, setExitCode] = useState("");
   const [isTracking, setIsTracking] = useState(false);
 
-  //Disable Gestures
-  useEffect(() => {
-    navigation.setOptions({
-      gestureEnabled: false, // disables swipe to go back
-    });
-  }, []);
+  // Lock gestures while in child mode
+  useFocusEffect(
+    React.useCallback(() => {
+      navigation.setOptions({ gestureEnabled: false });
+      return () => navigation.setOptions({ gestureEnabled: true });
+    }, [navigation])
+  );
 
-  useEffect(() => {
-    let parent = navigation.getParent();
-    while (parent) {
-      parent.setOptions({ gestureEnabled: false });
-      parent = parent.getParent();
+  const formatDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString("en-SG", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    } catch (err) {
+      return "Invalid date";
     }
+  };
 
-    return () => {
-      let parent = navigation.getParent();
-      while (parent) {
-        parent.setOptions({ gestureEnabled: true });
-        parent = parent.getParent();
+  // Listen to real-time tracking status
+  useEffect(() => {
+    const db = getFirestore();
+    const docRef = doc(db, "locations", childId);
+
+    let trackingStarted = false; // prevent multiple triggers
+
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const newTrackingStatus = data.istracking === true;
+
+        // If tracking just switched ON
+        if (newTrackingStatus && !trackingStarted) {
+          trackingStarted = true;
+          setIsTracking(true);
+          startForegroundTracking(async (coords) => {
+            const token = await auth.currentUser?.getIdToken();
+
+            await fetch(`http://${ip}:8000/location/update`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                childid: childId,
+                latitude: coords.latitude,
+                longitude: coords.longitude,
+                istracking: true,
+              }),
+            });
+          });
+        }
+
+        // If tracking is turned off
+        if (!newTrackingStatus) {
+          trackingStarted = false;
+          stopForegroundTracking();
+          setIsTracking(false);
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [childId]);
+
+  // Fetch homework data
+  useEffect(() => {
+    const fetchHomeworkForChild = async () => {
+      try {
+        const token = await auth.currentUser?.getIdToken();
+
+        // Step 1: Get child data
+        const childRes = await fetch(`http://${ip}:8000/child/${childId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const childData = await childRes.json();
+
+        // Step 2: Get class document to retrieve class ID
+        const classRes = await fetch(
+          `http://${ip}:8000/classbynamewithid/${childData.class}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const classData = await classRes.json();
+        const classid = classData.id;
+
+        // Step 3: Fetch homework for that class
+        const hwRes = await fetch(
+          `http://${ip}:8000/homework/class/${classid}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!hwRes.ok) throw new Error("Failed to fetch homework");
+
+        const homeworkData = await hwRes.json();
+        console.log("📚 Homework Data:", homeworkData); //for debugging
+        setHomeworkList(homeworkData);
+      } catch (err) {
+        console.error("❌ Error loading homework:", err);
       }
     };
-  }, [navigation]);
 
-  // REMOTE CONTROLLED TRACKING FLAG — Can be toggled by parent (e.g. via Appwrite)
-  // const shouldStartTracking = false;
-
-  // useEffect(() => {
-  //   if (shouldStartTracking && !isTracking) {
-  //     startForegroundTracking((coords) => {
-  //       console.log("Remote-triggered tracking:", coords);
-  //       // TODO: Send to backend
-  //     });
-  //     setIsTracking(true);
-  //   }
-  // }, [shouldStartTracking]);
-
-  useEffect(() => {
-    setHomeworkList([
-      {
-        id: "1",
-        subject: "Math",
-        task: "Complete worksheet 3",
-        due: "March 25",
-      },
-      { id: "2", subject: "English", task: "Write an essay", due: "March 26" },
-      {
-        id: "3",
-        subject: "Science",
-        task: "Finish lab report",
-        due: "March 27",
-      },
-    ]);
-  }, []);
+    fetchHomeworkForChild();
+  }, [childId]);
 
   const handleExitChildMode = async () => {
     if (exitCode === PRESET_EXIT_CODE) {
       try {
-        await stopForegroundTracking(); // force stop it
-        setIsTracking(false);
+        await stopForegroundTracking();
+        const token = await auth.currentUser?.getIdToken();
+
+        await fetch(`http://${ip}:8000/location/stop`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ childid: childId }),
+        });
       } catch (err) {
-        console.warn("Failed to tracking:", err);
+        console.warn("Failed to stop tracking:", err);
       }
 
       setModalVisible(false);
-
-      // Force gestures back on before navigating
-      let parent = navigation.getParent();
-      while (parent) {
-        parent.setOptions({ gestureEnabled: true });
-        parent = parent.getParent();
-      }
-
-      router.replace("./childinfo");
+      router.back();
     } else {
       Alert.alert("Incorrect Code", "The exit code entered is incorrect.");
+    }
+  };
+
+  const startTracking = async () => {
+    try {
+      await startForegroundTracking(async (coords) => {
+        const token = await auth.currentUser?.getIdToken();
+
+        await fetch(`http://${ip}:8000/location/update`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            childid: childId,
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            istracking: true,
+          }),
+        });
+      });
+
+      Alert.alert("Tracking Started", "Your location is now being tracked.");
+    } catch (err) {
+      console.error("Failed to start foreground tracking:", err);
+      Alert.alert("Error", "Could not start tracking. Check permissions.");
     }
   };
 
@@ -124,50 +213,28 @@ export default function ChildModeScreen() {
         ]}
         renderItem={({ item }) => (
           <View style={styles.homeworkCard}>
-            <Text style={styles.subject}>{item.subject}</Text>
-            <Text style={styles.task}>{item.task}</Text>
-            <Text style={styles.dueDate}>Due: {item.due}</Text>
+            <Text style={styles.subject}>{item.name}</Text>
+            <Text style={styles.task}>{item.content}</Text>
+            <Text style={styles.dueDate}>Due: {formatDate(item.duedate)}</Text>
           </View>
         )}
       />
 
-      {/* Start Tracking Button (I'm leaving)*/}
       {!isTracking && (
         <TouchableOpacity
           style={[styles.exitButton, { backgroundColor: "#285E5E" }]}
-          onPress={async () => {
-            try {
-              console.log("Attempting to start foreground tracking...");
-              await startForegroundTracking((coords) => {
-                console.log("Tracked Location:", coords);
-                // TODO: Send this to Appwrite backend here
-              });
-              setIsTracking(true);
-              Alert.alert(
-                "Tracking Started",
-                "Your location is now being tracked."
-              );
-            } catch (err) {
-              console.error("Failed to start foreground tracking:", err);
-              Alert.alert(
-                "Error",
-                "Could not start tracking. Check permissions."
-              );
-            }
-          }}
+          onPress={startTracking}
         >
           <Text style={styles.exitButtonText}>I'm Leaving Home/School</Text>
         </TouchableOpacity>
       )}
 
-      {/* Tracking Banner */}
       {isTracking && (
         <View style={styles.trackingBanner}>
           <Text style={styles.trackingText}>📍 Tracking in progress...</Text>
         </View>
       )}
 
-      {/* Exit Child Mode Button */}
       <TouchableOpacity
         style={styles.exitButton}
         onPress={() => setModalVisible(true)}

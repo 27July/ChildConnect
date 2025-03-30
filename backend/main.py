@@ -14,6 +14,19 @@ from fastapi import HTTPException, Depends, Body
 from datetime import datetime
 from firebase_admin import credentials, storage, firestore
 
+<<<<<<< HEAD
+=======
+
+# import the routers
+from location_routes import router as location_router
+from homework_route import router as homework_router
+from schools_route import router as schools_router
+from schoolofchild_route import router as school_of_child_router
+
+
+
+
+>>>>>>> keerthimain
 cloudinary.config(
     cloud_name="dqatmjayu",
     api_key="834117339387158",
@@ -32,7 +45,16 @@ db = firestore.client()
 
 preload_school_data()
 
+<<<<<<< HEAD
+=======
+#External Routers
+>>>>>>> keerthimain
 app = FastAPI()
+app.include_router(location_router)
+app.include_router(schools_router)
+app.include_router(homework_router)
+app.include_router(school_of_child_router)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -321,35 +343,7 @@ def get_attendance_by_date(date: str, user=Depends(get_current_user)):
     return results
 
 
-# ✅ BACKEND: FastAPI route
-@app.get("/schoolsinfo")
-def get_schools_info(user=Depends(get_current_user)):
-    uid = user["uid"]
-    schools = set()
 
-    # Fetch children where user is father or mother
-    father_query = db.collection("children").where("fatherid", "==", uid).stream()
-    mother_query = db.collection("children").where("motherid", "==", uid).stream()
-
-    for doc in father_query:
-        data = doc.to_dict()
-        if "school" in data:
-            schools.add(data["school"])
-
-    for doc in mother_query:
-        data = doc.to_dict()
-        if "school" in data:
-            schools.add(data["school"])
-
-    school_infos = []
-    for school_name in schools:
-        doc = db.collection("schoolapi").document(school_name).get()
-        if doc.exists:
-            info = doc.to_dict()
-            info["school_name"] = school_name
-            school_infos.append(info)
-
-    return school_infos
 
 @app.get("/documents/{childid}")
 def get_documents_for_child(childid: str, user=Depends(get_current_user)):
@@ -458,15 +452,7 @@ def update_profile(data: dict = Body(...), user=Depends(get_current_user)):
         print("❌ Error in /updateprofile:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/homework/class/{classid}")
-def get_homework_by_class(classid: str, user=Depends(get_current_user)):
-    homework_docs = db.collection("homework").where("classid", "==", classid).stream()
-    result = []
-    for doc in homework_docs:
-        data = doc.to_dict()
-        data["id"] = doc.id
-        result.append(data)
-    return result
+
 
 @app.get("/classbynamewithid/{classname}")
 def get_class_by_name_with_id(classname: str, user=Depends(get_current_user)):
@@ -474,3 +460,191 @@ def get_class_by_name_with_id(classname: str, user=Depends(get_current_user)):
     for doc in class_ref:
         return doc.to_dict() | {"id": doc.id}
     raise HTTPException(status_code=404, detail="Class not found")
+
+@app.get("/findchats")
+async def find_chats(user_data=Depends(get_current_user)):
+    user_id = user_data["uid"]
+    chats_ref = db.collection("chat")
+
+    query1 = chats_ref.where("userID1", "==", user_id).stream()
+    query2 = chats_ref.where("userID2", "==", user_id).stream()
+
+    chats = []
+    for doc in list(query1) + list(query2):
+        chat_data = doc.to_dict()
+        chat_data["id"] = doc.id
+
+        # Identify the other participant
+        other_user_id = (
+            chat_data["userID2"] if chat_data["userID1"] == user_id else chat_data["userID1"]
+        )
+
+        # Fetch other user's profile
+        other_user_doc = db.collection("users").document(other_user_id).get()
+        if other_user_doc.exists:
+            other_data = other_user_doc.to_dict()
+            chat_data["otherUserName"] = other_data.get("name", "Unknown User")
+            chat_data["otherUserPic"] = other_data.get("profilepic", "")
+        else:
+            chat_data["otherUserName"] = "Unknown User"
+            chat_data["otherUserPic"] = ""
+
+        # ✅ Correct isRead check: Are there any messages sent to me that are still unread?
+        messages_ref = db.collection("chat").document(doc.id).collection("messages")
+        unread = messages_ref.where("receiver", "==", user_id).where("isRead", "==", False).limit(1).stream()
+        has_unread = any(True for _ in unread)
+        chat_data["isRead"] = not has_unread
+
+        chats.append(chat_data)
+
+    return chats
+
+
+@app.get("/findspecificchat/{chat_id}")
+async def find_specific_chat(chat_id: str, user=Depends(get_current_user)):
+    messages_ref = db.collection("chat").document(chat_id).collection("messages")
+    messages = messages_ref.order_by("timestamp").stream()
+    result = [dict(m.to_dict()) for m in messages]
+    return result
+
+@app.post("/sendmessage")
+def send_message(data: dict = Body(...), user=Depends(get_current_user)):
+    try:
+        user_id = user["uid"]
+        chat_id = data["chatId"]
+        message = data.get("message", "")
+        image = data.get("image", "")
+
+        receiver = None
+        chat_ref = db.collection("chat").document(chat_id)
+        chat_doc = chat_ref.get()
+        if chat_doc.exists:
+            chat_data = chat_doc.to_dict()
+            receiver = chat_data["userID2"] if chat_data["userID1"] == user_id else chat_data["userID1"]
+        else:
+            raise HTTPException(status_code=404, detail="Chat not found")
+
+        image_url = ""
+        if isinstance(image, str) and image.startswith("data:image"):
+            base64_str = image.split(";base64,")[1]
+            decoded_image = base64.b64decode(base64_str)
+            result = cloudinary.uploader.upload(decoded_image)
+            image_url = result["secure_url"]
+
+        # Create new message document
+        message_data = {
+            "sender": user_id,
+            "receiver": receiver,
+            "message": message,
+            "image": image_url,
+            "timestamp": firestore.SERVER_TIMESTAMP,
+            "isRead": False,
+        }
+        messages_ref = chat_ref.collection("messages")
+        messages_ref.add(message_data)
+
+        # Update chat metadata
+        chat_ref.update({
+            "lastMessage": message,
+            "lastUpdated": firestore.SERVER_TIMESTAMP,
+            "lastSender": user_id
+        })
+
+        return {"message": "Message sent successfully"}
+
+    except Exception as e:
+        print("❌ Error sending message:", e)
+        raise HTTPException(status_code=500, detail=str(e))
+        
+@app.post("/markread/{chat_id}")
+def mark_chat_as_read(chat_id: str, user=Depends(get_current_user)):
+    try:
+        user_id = user["uid"]
+        messages_ref = db.collection("chat").document(chat_id).collection("messages")
+        unread_messages = messages_ref.where("receiver", "==", user_id).where("isRead", "==", False).stream()
+
+        batch = db.batch()
+        for msg in unread_messages:
+            msg_ref = msg.reference
+            batch.update(msg_ref, {"isRead": True})
+        batch.commit()
+
+        return {"message": "Marked as read"}
+    except Exception as e:
+        print("❌ Error marking as read:", e)
+        raise HTTPException(status_code=500, detail=str(e))
+@app.get("/chat/{chat_id}/otheruser")
+def get_other_user_profile(chat_id: str, user=Depends(get_current_user)):
+    user_id = user["uid"]
+    chat_doc = db.collection("chat").document(chat_id).get()
+    if not chat_doc.exists:
+        raise HTTPException(status_code=404, detail="Chat not found")
+
+    chat = chat_doc.to_dict()
+    other_user_id = chat["userID2"] if chat["userID1"] == user_id else chat["userID1"]
+    other_user_doc = db.collection("users").document(other_user_id).get()
+    if other_user_doc.exists:
+        return other_user_doc.to_dict()
+    else:
+        raise HTTPException(status_code=404, detail="User not found")
+
+@app.get("/childrenof/{user_id}")
+def get_children_of_user(user_id: str, user=Depends(get_current_user)):
+    # Query 1: where fatherid == user_id
+    father_query = db.collection("children").where("fatherid", "==", user_id).stream()
+    # Query 2: where motherid == user_id
+    mother_query = db.collection("children").where("motherid", "==", user_id).stream()
+
+    children = []
+    seen = set()
+
+    for child in father_query:
+        data = child.to_dict()
+        data["id"] = child.id
+        children.append(data)
+        seen.add(child.id)
+
+    for child in mother_query:
+        if child.id not in seen:
+            data = child.to_dict()
+            data["id"] = child.id
+            children.append(data)
+
+    return children
+
+@app.get("/class/{class_id}/children")
+def get_children_of_class(class_id: str, user=Depends(get_current_user)):
+    class_doc = db.collection("class").document(class_id).get()
+    if not class_doc.exists:
+        raise HTTPException(status_code=404, detail="Class not found")
+
+    class_data = class_doc.to_dict()
+    child_ids = class_data.get("children", [])
+    children_data = []
+
+    for child_id in child_ids:
+        child_doc = db.collection("children").document(child_id).get()
+        if child_doc.exists:
+            children_data.append({**child_doc.to_dict(), "id": child_doc.id})
+
+    return children_data
+
+@app.get("/attendance-for-date/{date}")
+def get_attendance_for_date(date: str, user=Depends(get_current_user)):
+    doc = db.collection("attendance").document(date).get()
+    if not doc.exists:
+        return []
+
+    data = doc.to_dict()
+    children = data.get("children", [])
+    images = data.get("childrenimage", [])
+
+    results = []
+    for index, cid in enumerate(children):
+        results.append({
+            "childid": cid,
+            "present": True,
+            "image": images[index] if index < len(images) else "null"
+        })
+
+    return results
