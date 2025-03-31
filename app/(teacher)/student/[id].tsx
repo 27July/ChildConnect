@@ -115,7 +115,7 @@ export default function StudentProfileScreen() {
 
         {[
           { label: "Attendance Records", path: "/teacher/profile/attendance" },
-          { label: "Documentation", path: "/teacher/profile/documentationlist" },
+          { label: "Documentation", path: "/(teacher)/profile/documentationlist" },
           { label: "Homework List", path: "/teacher/profile/childhomework" },
         ].map((item, i) => (
           <TouchableOpacity
