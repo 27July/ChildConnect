@@ -783,3 +783,53 @@ def add_homework(data: dict, user=Depends(get_current_user)):
         "teacherid": data["teacherid"],
     })
     return {"success": True}
+
+class AnnouncementRequest(BaseModel):
+    classid: str
+    classname: str
+    name: str
+    content: str
+    teachername: str
+    teacheruserid: str
+
+@app.post("/addannouncement")
+def add_announcement(data: AnnouncementRequest, user=Depends(get_current_user)):
+    doc_ref = db.collection("announcements").document()
+    doc_ref.set({
+        "classid": data.classid,
+        "classname": data.classname,
+        "name": data.name,
+        "content": data.content,
+        "teachername": data.teachername,
+        "teacheruserid": data.teacheruserid,
+        "status": "open",
+        "created": firestore.SERVER_TIMESTAMP,
+    })
+    return {"success": True, "id": doc_ref.id}
+
+# Backend: FastAPI route for fetching announcements by classid
+
+@app.get("/announcements/{classid}")
+def get_announcements_for_class(classid: str, user=Depends(get_current_user)):
+    announcements = (
+        db.collection("announcements")
+        .where("classid", "==", classid)
+        .order_by("created", direction=firestore.Query.DESCENDING)
+        .stream()
+    )
+
+    result = []
+    for doc in announcements:
+        data = doc.to_dict()
+        data["id"] = doc.id
+        result.append(data)
+
+    return result
+
+@app.get("/class/{class_id}")
+def get_class_by_id(class_id: str, user=Depends(get_current_user)):
+    class_doc = db.collection("class").document(class_id).get()
+    if not class_doc.exists:
+        raise HTTPException(status_code=404, detail="Class not found")
+
+    return class_doc.to_dict() | {"id": class_doc.id}
