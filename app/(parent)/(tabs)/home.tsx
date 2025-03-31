@@ -58,7 +58,7 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <SafeAreaView className="flex-1 bg-primary-50">
+    <View className="flex-1 bg-primary-50">
       <View className="p-5">
         {/* 🔹 Profile Image */}
         <View className="items-center mb-4">
@@ -105,6 +105,6 @@ export default function HomeScreen() {
           />
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

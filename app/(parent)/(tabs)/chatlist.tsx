@@ -43,7 +43,7 @@ export default function ChatList() {
       });
       const myChildren = await myChildrenRes.json();
       const myChildrenByClass = {};
-      myChildren.forEach(child => {
+      myChildren.forEach((child) => {
         if (!myChildrenByClass[child.class]) {
           myChildrenByClass[child.class] = [];
         }
@@ -57,11 +57,14 @@ export default function ChatList() {
 
           try {
             // Fetch the teacher's classes
-            const classesRes = await fetch(`${apiURL}/classesof/${otherUserId}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
+            const classesRes = await fetch(
+              `${apiURL}/classesof/${otherUserId}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
             const teacherClasses = await classesRes.json();
-            const classNames = teacherClasses.map(c => c.name);
+            const classNames = teacherClasses.map((c) => c.name);
 
             // Filter my children who are in this teacher's class
             const relevantChildren = Object.entries(myChildrenByClass)
@@ -79,8 +82,10 @@ export default function ChatList() {
       );
 
       const sorted = enrichedChats.sort((a, b) => {
-        const aTime = a.lastUpdated?._seconds || new Date(a.lastUpdated).getTime() / 1000;
-        const bTime = b.lastUpdated?._seconds || new Date(b.lastUpdated).getTime() / 1000;
+        const aTime =
+          a.lastUpdated?._seconds || new Date(a.lastUpdated).getTime() / 1000;
+        const bTime =
+          b.lastUpdated?._seconds || new Date(b.lastUpdated).getTime() / 1000;
         return bTime - aTime;
       });
       setChats(sorted);
@@ -148,7 +153,7 @@ export default function ChatList() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-primary-50 px-5">
+    <View className="flex-1 bg-primary-50 px-5">
       <Text className="text-3xl font-extrabold text-[#2A2E43] mt-6 mb-4">
         Chats
       </Text>
@@ -162,6 +167,6 @@ export default function ChatList() {
           contentContainerStyle={{ paddingBottom: 20 }}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
