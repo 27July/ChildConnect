@@ -120,7 +120,7 @@ export default function ChildDetailScreen() {
           });
           if (res.ok) {
             const { name, profilepic } = await res.json();
-            return { name, profilepic, role };
+            return { name, profilepic, role, userid: id };
           }
           return null;
         })
@@ -131,6 +131,31 @@ export default function ChildDetailScreen() {
       console.error("Error fetching detail:", err);
     }
   };
+
+  const handleChat = async (teacherId: string) => {
+    if (!teacherId) return;
+    const user = auth.currentUser;
+    const token = await user.getIdToken();
+  
+    try {
+      const res = await fetch(`${apiURL}/startchatwith/${teacherId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      router.push({ pathname: "/chat/[id]", params: { id: data.id } });
+    } catch (err) {
+      Alert.alert("Chat Error", "Could not start or open chat.");
+    }
+  };
+  
+  const handleContactInfo = (teacherId: string) => {
+    if (!teacherId) return;
+    router.push({
+      pathname: "/(parent)/profile/otherContact",
+      params: { id: teacherId },
+    });
+  };
+  
   // Fetch Child Location From Backend
   const fetchChildLocationFromBackend = async () => {
     try {
@@ -292,8 +317,17 @@ export default function ChildDetailScreen() {
               </Text>
               <Text className="text-[#6C7A93] text-sm">{teacher.role}</Text>
             </View>
+            <View>
+              <TouchableOpacity onPress={() => handleChat(teacher.userid)}>
+                <Text className="text-blue-600 mb-1">Chat</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleContactInfo(teacher.userid)}>
+                <Text className="text-blue-600">Contact Info</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         ))}
+
 
         {/* Navigation buttons */}
         {[
