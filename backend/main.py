@@ -201,24 +201,31 @@ def get_home_data(user=Depends(get_current_user)):
     father_children = children_ref.where("fatherid", "==", uid).stream()
     mother_children = children_ref.where("motherid", "==", uid).stream()
 
-    class_names = set()
-
+    children = []
     for child in list(father_children) + list(mother_children):
-        child_data = child.to_dict()
-        class_name = child_data.get("class")
-        if class_name:
-            class_names.add(class_name)
+        data = child.to_dict()
+        data["id"] = child.id
+        children.append(data)
 
-    # Step 3: Get class document IDs (actual Firestore doc IDs)
+    # Step 3: Map class name → list of children
+    class_to_children = {}
+    for child in children:
+        cname = child.get("class")
+        if cname:
+            if cname not in class_to_children:
+                class_to_children[cname] = []
+            class_to_children[cname].append(child.get("name", "Unknown"))
+
+    # Step 4: Get Firestore class doc IDs
     class_ids = set()
-    classes_ref = db.collection("class")
-
-    for name in class_names:
-        query = classes_ref.where("name", "==", name).limit(1).stream()
+    class_name_to_id = {}
+    for cname in class_to_children.keys():
+        query = db.collection("class").where("name", "==", cname).limit(1).stream()
         for doc in query:
             class_ids.add(doc.id)
+            class_name_to_id[doc.id] = cname
 
-    # Step 4: Fetch announcements for these class IDs where status == "open"
+    # Step 5: Fetch announcements and map child names
     announcements = []
     for class_id in class_ids:
         query = db.collection("announcements") \
@@ -226,12 +233,20 @@ def get_home_data(user=Depends(get_current_user)):
                   .where("status", "==", "open") \
                   .stream()
         for doc in query:
-            announcements.append({**doc.to_dict(), "id": doc.id})
+            data = doc.to_dict()
+            cname = data.get("classname")
+            children_for_class = class_to_children.get(cname, [])
+            announcements.append({
+                **data,
+                "id": doc.id,
+                "children": children_for_class  # 🔹 Add list of child names here
+            })
 
     return {
         "profilepic": profile_picture,
         "announcements": announcements
     }
+
 
 @app.get("/myclasses")
 def get_my_classes(user=Depends(get_current_user)):

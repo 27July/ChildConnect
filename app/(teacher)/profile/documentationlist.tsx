@@ -18,7 +18,6 @@ export default function DocumentationList() {
   const router = useRouter();
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const apiURL = `http://${ip}:8000`;
 
   useEffect(() => {
@@ -26,7 +25,6 @@ export default function DocumentationList() {
       const user = auth.currentUser;
       if (!user) return;
       const token = await user.getIdToken();
-      setCurrentUserId(user.uid);
 
       try {
         const res = await fetch(`${apiURL}/documents/${childId}`, {
@@ -76,34 +74,6 @@ export default function DocumentationList() {
     fetchDocs();
   }, [childId]);
 
-  const toggleStatus = async (docId: string, createdby: string) => {
-    const user = auth.currentUser;
-    if (!user || user.uid !== createdby) {
-      Alert.alert("Permission Denied", "You did not create this documentation");
-      return;
-    }
-
-    try {
-      const token = await user.getIdToken();
-      const res = await fetch(`${apiURL}/documents/${docId}/toggle`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) throw new Error("Toggle failed");
-
-      const updated = await res.json();
-      setDocuments((prev) =>
-        prev.map((doc) =>
-          doc.id === docId ? { ...doc, status: updated.status } : doc
-        )
-      );
-    } catch (err) {
-      console.error("Failed to toggle status:", err);
-      Alert.alert("Error", "Failed to toggle status");
-    }
-  };
-
   return (
     <SafeAreaView className="flex-1 bg-primary-50 p-5">
       <Text className="text-2xl font-bold text-center mb-6">
@@ -139,7 +109,8 @@ export default function DocumentationList() {
                 {/* 🔹 Creator Info */}
                 {item.createdByName && (
                   <Text className="text-sm text-gray-600 mt-2 italic text-center">
-                    Created by: {item.createdByName}, {capitalize(item.createdByRole)}
+                    Created by: {item.createdByName},{" "}
+                    {capitalize(item.createdByRole)}
                   </Text>
                 )}
 
@@ -149,16 +120,6 @@ export default function DocumentationList() {
                     {formatDate(item.created)}
                   </Text>
                 )}
-
-                {/* 🔹 Status Toggle Button */}
-                <TouchableOpacity
-                  className="mt-4 py-2 w-full bg-primary-400 rounded-xl"
-                  onPress={() => toggleStatus(item.id, item.createdby)}
-                >
-                  <Text className="text-white font-bold text-center">
-                    Status: {item.status === "open" ? "Open" : "Closed"}
-                  </Text>
-                </TouchableOpacity>
               </View>
             )}
             ListEmptyComponent={() => (

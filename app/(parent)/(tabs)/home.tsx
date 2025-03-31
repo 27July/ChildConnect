@@ -12,6 +12,7 @@ type Announcement = {
   content: string;
   classname: string;
   teachername: string;
+  children?: string[]; // 🔹 NEW: optional array of child names
 };
 
 export default function HomeScreen() {
@@ -99,6 +100,13 @@ export default function HomeScreen() {
                 <Text className="text-sm text-primary-300">
                   Teacher: {item.teachername}
                 </Text>
+
+                {item.children && item.children.length > 0 && (
+                  <Text className="text-sm text-primary-300">
+                    For: {item.children.join(", ")}
+                  </Text>
+                )}
+
                 <Text className="mt-1 text-gray-700">{item.content}</Text>
               </View>
             )}
