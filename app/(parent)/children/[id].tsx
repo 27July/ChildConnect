@@ -400,22 +400,7 @@ export default function ChildDetailScreen() {
         </View>
 
         {/* Map with interactive markers */}
-        <TouchableOpacity
-          activeOpacity={0.9}
-          // onPress={() => {
-          //   router.push({
-          //     pathname: "../../(childmode)/MapFullScreen",
-          //     params: {
-          //       childLat: childBackendLocation.latitude,
-          //       childLng: childBackendLocation.longitude,
-          //       userLat: location.latitude,
-          //       userLng: location.longitude,
-          //       schoolLat: 1.3462227582931519,
-          //       schoolLng: 103.68243408203125,
-          //     },
-          //   });
-          // }}
-        >
+        <TouchableOpacity activeOpacity={0.9}>
           <View
             style={{ height: 300 }}
             className="rounded-xl overflow-hidden bg-gray-300"
@@ -431,6 +416,7 @@ export default function ChildDetailScreen() {
                   longitudeDelta: 0.01,
                 }}
               >
+                {/* Custom Child Pin */}
                 <Marker coordinate={childBackendLocation}>
                   <View
                     style={{
@@ -455,6 +441,7 @@ export default function ChildDetailScreen() {
                   </Callout>
                 </Marker>
 
+                {/* Custom Parent Pin */}
                 <Marker coordinate={location}>
                   <View
                     style={{
@@ -479,6 +466,7 @@ export default function ChildDetailScreen() {
                   </Callout>
                 </Marker>
 
+                {/* Custom School Pin */}
                 <Marker coordinate={SCHOOL_LOCATION}>
                   <View
                     style={{
@@ -509,6 +497,27 @@ export default function ChildDetailScreen() {
               </Text>
             )}
           </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          className="bg-primary-500 py-3 rounded-full mt-3 mb-5"
+          onPress={() =>
+            router.push({
+              pathname: "./MapFullScreen",
+              params: {
+                childLat: childBackendLocation.latitude,
+                childLng: childBackendLocation.longitude,
+                userLat: location.latitude,
+                userLng: location.longitude,
+                schoolLat: 1.3462227582931519,
+                schoolLng: 103.68243408203125,
+              },
+            })
+          }
+        >
+          <Text className="text-center font-bold text-white">
+            View Fullscreen Map
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
