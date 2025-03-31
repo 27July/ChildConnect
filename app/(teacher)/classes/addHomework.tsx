@@ -4,205 +4,160 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
   Alert,
-  Modal,
+  FlatList,
 } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { auth } from "@/firebaseConfig";
+import { ip } from "@/utils/server_ip.json";
+
+const subjects = ["Math", "Science", "English", "Mother Tongue"];
 
 export default function AddHomeworkScreen() {
-  const navigation = useNavigation();
+  const { id: classid } = useLocalSearchParams();
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
-  const [classId, setClassId] = useState("");
-  const [dueDate, setDueDate] = useState(new Date());
+  const [subject, setSubject] = useState("Math");
+  const [showSubjectDropdown, setShowSubjectDropdown] = useState(false);
+  const [duedate, setDuedate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [tempDate, setTempDate] = useState(new Date());
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const apiURL = `http://${ip}:8000`;
 
-  const handleAddHomework = async () => {
-    const homeworkData = {
-      name,
-      content,
-      classid: classId,
-      status: "open",
-      duedate: dueDate,
-    };
-
-    console.log("Homework Data:", homeworkData);
+  const handleSubmit = async () => {
+    if (!name || !content || !subject || !duedate) {
+      Alert.alert("Missing Fields", "Please fill in all fields.");
+      return;
+    }
 
     try {
-      // TODO: Send data to backend (e.g., Firestore)
-      Alert.alert("Success", "Homework added successfully");
-      navigation.goBack();
-    } catch (error) {
-      console.error("Error adding homework: ", error);
-      Alert.alert("Error", "Failed to add homework");
-    }
-  };
+      setLoading(true);
+      const token = await auth.currentUser.getIdToken();
+      const teacherid = auth.currentUser.uid;
 
-  const handleDateChange = (event, selectedDate) => {
-    if (selectedDate) {
-      setTempDate(selectedDate);
-    }
-  };
+      const payload = {
+        classid,
+        name,
+        content,
+        duedate,
+        subject,
+        teacherid,
+      };
 
-  const formatDate = (date) => {
-    return date.toLocaleDateString("en-GB", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+      const res = await fetch(`${apiURL}/addhomework`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Failed to assign homework");
+      Alert.alert("Success", "Homework assigned.");
+      router.back();
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Error", "Submission failed.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.container}
+    <SafeAreaView className="flex-1 bg-primary-50 px-5 pt-6">
+      <Text className="text-3xl font-extrabold text-[#2A2E43] mb-6 text-center">
+        Assign Homework
+      </Text>
+
+      {/* Title */}
+      <Text className="text-[#2A2E43] font-semibold mb-1">Title</Text>
+      <TextInput
+        value={name}
+        onChangeText={setName}
+        placeholder="e.g. Math Homework"
+        placeholderTextColor="#999"
+        className="bg-white rounded-xl px-4 py-3 border border-gray-300 mb-4 text-[#2A2E43]"
+      />
+
+      {/* Content */}
+      <Text className="text-[#2A2E43] font-semibold mb-1">Content</Text>
+      <TextInput
+        value={content}
+        onChangeText={setContent}
+        placeholder="e.g. Page 15 Q1-5"
+        placeholderTextColor="#999"
+        multiline
+        className="bg-white rounded-xl px-4 py-3 border border-gray-300 mb-4 text-[#2A2E43]"
+        style={{ minHeight: 100 }}
+      />
+
+      {/* Due Date */}
+      <Text className="text-[#2A2E43] font-semibold mb-1">Due Date</Text>
+      <TouchableOpacity
+        onPress={() => setShowDatePicker(true)}
+        className="bg-white rounded-xl border border-gray-300 px-4 py-3 mb-4"
       >
-        <Text style={styles.title}>New Homework</Text>
+        <Text className="text-[#2A2E43]">
+          {duedate.toLocaleDateString("en-SG", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })}
+        </Text>
+      </TouchableOpacity>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Homework Name"
-          placeholderTextColor="#666"
-          value={name}
-          onChangeText={setName}
-        />
-        <TextInput
-          style={[styles.input, styles.multilineInput]}
-          placeholder="Content (e.g., Write a paragraph on water cycle)"
-          placeholderTextColor="#666"
-          value={content}
-          onChangeText={setContent}
-          multiline
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Class ID"
-          placeholderTextColor="#666"
-          value={classId}
-          onChangeText={setClassId}
-        />
+      <DateTimePickerModal
+        isVisible={showDatePicker}
+        mode="date"
+        onConfirm={(date) => {
+          setDuedate(date);
+          setShowDatePicker(false);
+        }}
+        onCancel={() => setShowDatePicker(false)}
+      />
 
-        <TouchableOpacity
-          style={[styles.input, styles.datePicker]}
-          onPress={() => {
-            setTempDate(dueDate);
-            setShowDatePicker(true);
-          }}
-        >
-          <Text style={{ color: "#1E3765", fontSize: 15 }}>
-            Due Date: {formatDate(dueDate)}
-          </Text>
-        </TouchableOpacity>
+      {/* Subject */}
+      <Text className="text-[#2A2E43] font-semibold mb-1">Subject</Text>
+      <TouchableOpacity
+        onPress={() => setShowSubjectDropdown(!showSubjectDropdown)}
+        className="bg-white rounded-xl border border-gray-300 px-4 py-3"
+      >
+        <Text className="text-[#2A2E43]">{subject}</Text>
+      </TouchableOpacity>
 
-        <Modal transparent visible={showDatePicker} animationType="fade">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <DateTimePicker
-                value={tempDate}
-                mode="date"
-                display="spinner"
-                onChange={handleDateChange}
-                themeVariant="light"
-                style={{ backgroundColor: "white" }}
-              />
-              <TouchableOpacity
-                style={styles.doneButton}
-                onPress={() => {
-                  setDueDate(tempDate);
-                  setShowDatePicker(false);
-                }}
-              >
-                <Text style={styles.doneButtonText}>Done</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
+      {showSubjectDropdown && (
+        <View className="bg-white border border-gray-300 rounded-xl mt-1 mb-6 overflow-hidden">
+          {subjects.map((item) => (
+            <TouchableOpacity
+              key={item}
+              onPress={() => {
+                setSubject(item);
+                setShowSubjectDropdown(false);
+              }}
+              className="py-3 px-4 border-b border-gray-200"
+            >
+              <Text className="text-[#2A2E43] text-center">{item}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
-        <TouchableOpacity style={styles.button} onPress={handleAddHomework}>
-          <Text style={styles.buttonText}>Add Homework</Text>
-        </TouchableOpacity>
-      </KeyboardAvoidingView>
+      {/* Submit Button */}
+      <TouchableOpacity
+        className={`bg-primary-400 py-4 rounded-full ${
+          loading ? "opacity-50" : ""
+        }`}
+        onPress={handleSubmit}
+        disabled={loading}
+      >
+        <Text className="text-white font-bold text-center text-base">
+          {loading ? "Submitting..." : "Submit Homework"}
+        </Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#f6fff8",
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 30,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#1E3765",
-    marginBottom: 24,
-    textAlign: "center",
-  },
-  input: {
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 15,
-    marginBottom: 16,
-    borderColor: "#d1d5db",
-    borderWidth: 1,
-    color: "#1E3765",
-  },
-  multilineInput: {
-    minHeight: 100,
-    textAlignVertical: "top",
-  },
-  datePicker: {
-    justifyContent: "center",
-  },
-  button: {
-    backgroundColor: "#285E5E",
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContent: {
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: 20,
-    alignItems: "center",
-    width: "85%",
-  },
-  doneButton: {
-    marginTop: 12,
-    backgroundColor: "#285E5E",
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-  },
-  doneButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 15,
-  },
-});

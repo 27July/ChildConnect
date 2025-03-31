@@ -131,9 +131,18 @@ export default function ClassDetailScreen() {
       </Text>
 
       <View className="flex-row justify-between mb-4 space-x-3">
-        <TouchableOpacity className="flex-1 bg-primary-400 px-4 py-2 rounded-xl shadow-sm items-center">
-          <Text className="text-white font-semibold">Assign Homework</Text>
-        </TouchableOpacity>
+      <TouchableOpacity
+  className="flex-1 bg-primary-400 px-4 py-2 rounded-xl shadow-sm items-center"
+  onPress={() =>
+    router.push({
+      pathname: "/(teacher)/classes/addHomework",
+      params: { id }, // this is the class id
+    })
+  }
+>
+  <Text className="text-white font-semibold">Assign Homework</Text>
+</TouchableOpacity>
+
         <TouchableOpacity className="flex-1 bg-primary-400 px-4 py-2 rounded-xl shadow-sm items-center">
           <Text className="text-white font-semibold">Add Announcement</Text>
         </TouchableOpacity>

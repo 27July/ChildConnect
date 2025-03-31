@@ -13,6 +13,7 @@ from services.schoolsapi import preload_school_data
 from fastapi import FastAPI, HTTPException, Depends, Body
 from datetime import datetime
 from firebase_admin import credentials, storage, firestore
+from pydantic import BaseModel
 
 
 # import the routers
@@ -756,3 +757,29 @@ def get_classes_of_user(user_id: str, user=Depends(get_current_user)):
 
     print(f"📦 Total classes returned for {user_id}: {len(result)}")
     return result
+
+# 🔧 Define Pydantic request model FIRST
+class HomeworkRequest(BaseModel):
+    classid: str
+    name: str
+    content: str
+    duedate: str  # e.g., "March 30, 2025"
+    subject: str
+    teacherid: str
+
+@app.post("/addhomework")
+def add_homework(data: dict, user=Depends(get_current_user)):
+    # Parse ISO date to datetime
+    duedate_obj = datetime.fromisoformat(data["duedate"])
+    
+    homework_ref = db.collection("homework").document()
+    homework_ref.set({
+        "name": data["name"],
+        "content": data["content"],
+        "duedate": duedate_obj,
+        "classid": data["classid"],
+        "subject": data["subject"],
+        "status": "open",
+        "teacherid": data["teacherid"],
+    })
+    return {"success": True}
