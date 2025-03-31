@@ -412,35 +412,56 @@ def toggle_document_status(doc_id: str, user=Depends(get_current_user)):
 def create_document(doc: dict = Body(...), user=Depends(get_current_user)):
     try:
         image_url = ""
+        file_url = ""
+
+        # 🔹 Optional image field (uploaded as 'image')
         image_data = doc.get("image")
-
-        # ✅ Handle optional image upload to Cloudinary
-        if isinstance(image_data, str) and image_data.startswith("data:image"):
-            print("📸 Image received. Uploading to Cloudinary...")
-
+        if isinstance(image_data, str) and "base64" in image_data:
             try:
+                print("📸 Uploading image to Cloudinary...")
                 base64_str = image_data.split(";base64,")[1]
                 decoded_image = base64.b64decode(base64_str)
 
                 result = cloudinary.uploader.upload(
                     decoded_image,
-                    folder="documentation",
+                    folder="documentation/images",
                     public_id=str(uuid.uuid4()),
                     resource_type="image"
                 )
-
                 image_url = result.get("secure_url", "")
                 print("✅ Image uploaded:", image_url)
 
             except Exception as e:
-                print("❌ Cloudinary upload failed:", e)
+                print("❌ Image upload failed:", e)
                 raise HTTPException(status_code=500, detail="Image upload failed")
 
-        # ✅ Create the document
+        # 🔹 Optional file field (uploaded as 'file') – e.g., PDF
+        file_data = doc.get("file")
+        if isinstance(file_data, str) and "base64" in file_data:
+            try:
+                print("📄 Uploading file to Cloudinary...")
+                base64_str = file_data.split(";base64,")[1]
+                decoded_file = base64.b64decode(base64_str)
+
+                result = cloudinary.uploader.upload(
+                    decoded_file,
+                    folder="documentation/files",
+                    public_id=str(uuid.uuid4()),
+                    resource_type="raw"
+                )
+                file_url = result.get("secure_url", "")
+                print("✅ File uploaded:", file_url)
+
+            except Exception as e:
+                print("❌ File upload failed:", e)
+                raise HTTPException(status_code=500, detail="File upload failed")
+
+        # 🔹 Create the Firestore document
         new_doc = {
             "name": doc.get("name", ""),
             "content": doc.get("content", ""),
             "image": image_url,
+            "file": file_url,
             "status": "open",
             "createdby": user["uid"],
             "childrenid": doc.get("childid"),
@@ -455,6 +476,7 @@ def create_document(doc: dict = Body(...), user=Depends(get_current_user)):
     except Exception as e:
         print("❌ General error in /createdocument:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
+
     
 @app.post("/updateprofile")
 def update_profile(data: dict = Body(...), user=Depends(get_current_user)):

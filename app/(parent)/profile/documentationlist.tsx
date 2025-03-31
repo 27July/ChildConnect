@@ -7,9 +7,12 @@ import {
   ActivityIndicator,
   Image,
   Alert,
+  Linking,
+  Dimensions,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { WebView } from "react-native-webview";
 import { auth } from "@/firebaseConfig";
 import { ip } from "@/utils/server_ip.json";
 
@@ -74,6 +77,28 @@ export default function DocumentationList() {
     fetchDocs();
   }, [childId]);
 
+  const openPDF = async (url: string) => {
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      Alert.alert("Error", "Unable to open PDF.");
+    }
+  };
+
+  const renderPDF = (url: string) => {
+    const embedUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`;
+    const { width } = Dimensions.get("window");
+    return (
+      <View className="w-full h-64 mt-3 mb-3 overflow-hidden rounded-xl border border-gray-200">
+        <WebView
+          source={{ uri: embedUrl }}
+          style={{ flex: 1, width: width - 40 }} // -40 for padding
+        />
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-primary-50 p-5">
       <Text className="text-2xl font-bold text-center mb-6">
@@ -119,6 +144,20 @@ export default function DocumentationList() {
                   <Text className="text-sm text-gray-500 mt-1 text-center">
                     {formatDate(item.created)}
                   </Text>
+                )}
+
+                {/* 🔹 PDF Preview */}
+                {item.file && item.file.trim() !== "" && (
+                  <>
+                    {renderPDF(item.file)}
+
+                    <TouchableOpacity
+                      onPress={() => openPDF(item.file)}
+                      className="mt-2 px-4 py-2 bg-primary-400 rounded-full"
+                    >
+                      <Text className="text-white font-semibold">Open in Browser</Text>
+                    </TouchableOpacity>
+                  </>
                 )}
               </View>
             )}

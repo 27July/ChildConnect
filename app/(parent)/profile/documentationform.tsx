@@ -11,7 +11,9 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { auth } from "@/firebaseConfig";
@@ -22,7 +24,9 @@ export default function DocumentationForm() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [image, setImage] = useState<string | null>(null);
+  const [imageData, setImageData] = useState<string | null>(null);
+  const [fileData, setFileData] = useState<string | null>(null);
+  const [fileType, setFileType] = useState<string | null>(null);
   const apiURL = `http://${ip}:8000`;
 
   const pickImage = async () => {
@@ -33,8 +37,28 @@ export default function DocumentationForm() {
     });
 
     if (!result.canceled && result.assets.length > 0) {
-      setImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+      const base64 = result.assets[0].base64;
+      setImageData(`data:image/jpeg;base64,${base64}`);
     }
+  };
+
+  const pickFile = async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ["application/pdf"],
+      copyToCacheDirectory: true,
+      multiple: false,
+    });
+
+    if (result.canceled || !result.assets?.[0]) return;
+
+    const file = result.assets[0];
+    const base64 = await FileSystem.readAsStringAsync(file.uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    const mimeType = file.mimeType || "application/octet-stream";
+    setFileData(`data:${mimeType};base64,${base64}`);
+    setFileType(mimeType);
   };
 
   const handleSubmit = async () => {
@@ -58,7 +82,9 @@ export default function DocumentationForm() {
         body: JSON.stringify({
           name: title,
           content,
-          image,
+          image: imageData,
+          file: fileData,
+          filetype: fileType,
           childid: childId,
         }),
       });
@@ -101,21 +127,38 @@ export default function DocumentationForm() {
             numberOfLines={4}
           />
 
+          {/* 🔹 Upload Image Button */}
           <TouchableOpacity
             className="bg-primary-400 py-3 rounded-xl mb-3"
             onPress={pickImage}
           >
             <Text className="text-white text-center font-bold">
-              {image ? "Change Image" : "Upload Image"}
+              {imageData ? "Change Image" : "Upload Image"}
             </Text>
           </TouchableOpacity>
 
-          {image && (
+          {imageData && (
             <Image
-              source={{ uri: image }}
+              source={{ uri: imageData }}
               className="w-full h-48 rounded-xl mb-4"
               resizeMode="cover"
             />
+          )}
+
+          {/* 🔹 Upload File Button */}
+          <TouchableOpacity
+            className="bg-primary-400 py-3 rounded-xl mb-3"
+            onPress={pickFile}
+          >
+            <Text className="text-white text-center font-bold">
+              {fileData ? "Change File" : "Upload PDF"}
+            </Text>
+          </TouchableOpacity>
+
+          {fileData && fileType?.includes("pdf") && (
+            <Text className="text-sm italic text-gray-700 mb-3">
+              📄 PDF file attached
+            </Text>
           )}
 
           <TouchableOpacity
