@@ -32,8 +32,11 @@ const schoolPin = require("../../../assets/map_pins/school-pin.png");
 
 export default function ChildDetailScreen() {
   const { id: childId } = useLocalSearchParams();
+  console.log("🧩 Raw childId from params:", childId, typeof childId);
+
   const router = useRouter();
   const navigation = useNavigation();
+
   const [child, setChild] = useState<any>(null);
   const [teachers, setTeachers] = useState<any[]>([]);
   const [childBackendLocation, setChildBackendLocation] = useState<any>(null);
@@ -51,18 +54,60 @@ export default function ChildDetailScreen() {
   const mapRef = React.useRef<MapView | null>(null);
 
   const apiURL = `http://${ip}:8000`;
+  const hasFetchedAttendance = React.useRef(false);
 
   const SCHOOL_LOCATION = {
     latitude: 1.3462227582931519,
     longitude: 103.68243408203125,
     radius: 200,
   };
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // 1) DEFINE fetchTodayAttendance HERE, ABOVE THE USEEFFECT
+  // ───────────────────────────────────────────────────────────────────────────
+  const getTodayDateString = () => {
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, "0");
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const yyyy = today.getFullYear();
+    return `${dd}${mm}${yyyy}`;
+  };
+
+  const fetchTodayAttendance = async () => {
+    console.log("🚨 fetchTodayAttendance CALLED");
+    try {
+      const user = auth.currentUser;
+      if (!user || !childId) return;
+      const token = await user.getIdToken();
+      const today = getTodayDateString();
+
+      const res = await fetch(`${apiURL}/attendance/${today}?childid=${childId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("✅ Attendance response:", res.status);
+
+      if (res.ok) {
+        const data = await res.json();
+        const childAttendance = data[0]; // should return one entry
+        setIsPresent(childAttendance?.present ?? false);
+      } else {
+        setIsPresent(false);
+      }
+    } catch (err) {
+      console.error("Error fetching attendance:", err);
+      setIsPresent(false);
+    }
+  };
+  // ───────────────────────────────────────────────────────────────────────────
+
   // Ensure Gestures Are Enabled
   useEffect(() => {
     navigation.setOptions({ gestureEnabled: true });
   }, []);
 
-  // Fetch Initial Location Data
+  // ───────────────────────────────────────────────────────────────────────────
+  // 2) USEEFFECT THAT CALLS fetchTodayAttendance
+  // ───────────────────────────────────────────────────────────────────────────
   useEffect(() => {
     const fetchInitialData = async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -81,13 +126,30 @@ export default function ChildDetailScreen() {
 
       await fetchChildData();
       await fetchChildLocationFromBackend();
+
+      // ✅ Only fetch attendance once
+      if (
+        typeof childId === "string" &&
+        childId.length > 0 &&
+        !hasFetchedAttendance.current
+      ) {
+        console.log("📅 Fetching today's attendance for child:", childId);
+        // CALL THE ARROW FUNCTION WE DEFINED ABOVE
+        fetchTodayAttendance();
+        hasFetchedAttendance.current = true;
+      }
+
       setLoading(false);
     };
 
-    fetchInitialData();
+    if (childId) {
+      fetchInitialData();
+    }
   }, [childId]);
 
-  // Fetch Child Data
+  // ───────────────────────────────────────────────────────────────────────────
+  // 3) REMAINING LOGIC UNCHANGED
+  // ───────────────────────────────────────────────────────────────────────────
   const fetchChildData = async () => {
     const user = auth.currentUser;
     if (!user) return;
@@ -100,9 +162,12 @@ export default function ChildDetailScreen() {
       const childData = await childRes.json();
       setChild(childData);
 
-      const classRes = await fetch(`${apiURL}/classbyname/${childData.class}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const classRes = await fetch(
+        `${apiURL}/classbyname/${childData.class}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       const classData = await classRes.json();
 
       const teacherEntries = [
@@ -136,7 +201,7 @@ export default function ChildDetailScreen() {
     if (!teacherId) return;
     const user = auth.currentUser;
     const token = await user.getIdToken();
-  
+
     try {
       const res = await fetch(`${apiURL}/startchatwith/${teacherId}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -147,7 +212,7 @@ export default function ChildDetailScreen() {
       Alert.alert("Chat Error", "Could not start or open chat.");
     }
   };
-  
+
   const handleContactInfo = (teacherId: string) => {
     if (!teacherId) return;
     router.push({
@@ -155,8 +220,7 @@ export default function ChildDetailScreen() {
       params: { id: teacherId },
     });
   };
-  
-  // Fetch Child Location From Backend
+
   const fetchChildLocationFromBackend = async () => {
     try {
       const user = auth.currentUser;
@@ -172,13 +236,12 @@ export default function ChildDetailScreen() {
       const data = await res.json();
       setChildBackendLocation(data);
 
-      //Sync backend istracking state with frontend
       if (data.istracking !== undefined) {
         setIsTracking(data.istracking);
       }
 
-      const distance = calculateDistance(data, SCHOOL_LOCATION); // Calculate distance from school
-      setIsPresent(distance <= SCHOOL_LOCATION.radius); // Check if child is within school radius
+      const distance = calculateDistance(data, SCHOOL_LOCATION);
+      setIsPresent(distance <= SCHOOL_LOCATION.radius);
 
       if (data.timestamp) {
         const time = new Date(data.timestamp);
@@ -192,7 +255,6 @@ export default function ChildDetailScreen() {
   useEffect(() => {
     if (mapRef.current && location && childBackendLocation) {
       mapRef.current.fitToCoordinates(
-        // Fit map to show all markers
         [
           { latitude: location.latitude, longitude: location.longitude },
           childBackendLocation,
@@ -299,7 +361,7 @@ export default function ChildDetailScreen() {
         <View className="bg-[#C6E3DE] px-4 py-3 rounded-full mt-3 mb-4">
           <Text className="text-center font-bold text-[#2A2E43]">
             Today's Attendance:{" "}
-            <Text className="text-[#00B6AC]">
+            <Text className={isPresent ? "text-green-600" : "text-red-500"}>
               {isPresent ? "Present" : "Absent"}
             </Text>
           </Text>
@@ -321,13 +383,14 @@ export default function ChildDetailScreen() {
               <TouchableOpacity onPress={() => handleChat(teacher.userid)}>
                 <Text className="text-blue-600 mb-1">Chat</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleContactInfo(teacher.userid)}>
+              <TouchableOpacity
+                onPress={() => handleContactInfo(teacher.userid)}
+              >
                 <Text className="text-blue-600">Contact Info</Text>
               </TouchableOpacity>
             </View>
           </View>
         ))}
-
 
         {/* Navigation buttons */}
         {[
@@ -355,7 +418,7 @@ export default function ChildDetailScreen() {
         <TouchableOpacity
           className={`py-4 rounded-full mb-3 ${
             isTracking ? "bg-danger" : "bg-primary-500"
-          }`} // Change button color based on tracking state
+          }`}
           onPress={async () => {
             try {
               const user = auth.currentUser;
@@ -413,10 +476,7 @@ export default function ChildDetailScreen() {
 
               setIsTracking(!isTracking);
             } catch (err) {
-              Alert.alert(
-                "Tracking Error",
-                "Failed to toggle location tracking."
-              );
+              Alert.alert("Tracking Error", "Failed to toggle location tracking.");
             }
           }}
         >
@@ -457,7 +517,7 @@ export default function ChildDetailScreen() {
                       backgroundColor: "white",
                       padding: 6,
                       borderRadius: 999,
-                      elevation: 5, // Android shadow
+                      elevation: 5,
                       shadowColor: "#000",
                       shadowOffset: { width: 0, height: 2 },
                       shadowOpacity: 0.25,
