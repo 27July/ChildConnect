@@ -300,7 +300,7 @@ def get_attendance_by_child(child_id: str, user=Depends(get_current_user)):
     return result
 
 @app.get("/attendance/{date}")
-def get_attendance_by_date(date: str, user=Depends(get_current_user)):
+def get_attendance_by_date(date: str, childid: str = None, user=Depends(get_current_user)):
     doc = db.collection("attendance").document(date).get()
     if not doc.exists:
         raise HTTPException(status_code=404, detail="No attendance record for that date")
@@ -309,7 +309,30 @@ def get_attendance_by_date(date: str, user=Depends(get_current_user)):
     children = data.get("children", [])  # Present children only
     images = data.get("childrenimage", [])
 
-    # Fetch all children for this user
+    if childid:
+        present = childid in children
+        image = "null"
+        if present:
+            index = children.index(childid)
+            image = images[index] if index < len(images) else "null"
+
+        # Get child's class and grade
+        child_doc = db.collection("children").document(childid).get()
+        if child_doc.exists:
+            child_data = child_doc.to_dict()
+            return [{
+                "childid": childid,
+                "present": present,
+                "image": image,
+                "name": child_data.get("name", ""),
+                "class": child_data.get("class", ""),
+                "grade": child_data.get("grade", ""),
+                "profilepic": child_data.get("profilepic", "")
+            }]
+        else:
+            return []
+
+    # Fallback (for parent)
     all_children_docs = db.collection("children") \
         .where("fatherid", "==", user["uid"]) \
         .stream()
@@ -337,6 +360,7 @@ def get_attendance_by_date(date: str, user=Depends(get_current_user)):
         })
 
     return results
+
 
 
 
@@ -644,3 +668,63 @@ def get_attendance_for_date(date: str, user=Depends(get_current_user)):
         })
 
     return results
+
+from fastapi import UploadFile, File, Form
+from fastapi import Depends, HTTPException
+import cloudinary.uploader
+from datetime import datetime
+
+@app.post("/attendance/update")
+async def update_attendance(
+    childid: str = Form(...),
+    date: str = Form(...),  # Format: DDMMYYYY
+    present: bool = Form(...),
+    image: UploadFile = File(None),
+    user=Depends(get_current_user)
+):
+    doc_ref = db.collection("attendance").document(date)
+    doc = doc_ref.get()
+
+    # Initialize or load existing data
+    children = []
+    childrenimage = []
+
+    if doc.exists:
+        data = doc.to_dict()
+        children = data.get("children", [])
+        childrenimage = data.get("childrenimage", [])
+
+    # Remove existing entry if child already present
+    if childid in children:
+        index = children.index(childid)
+        children.pop(index)
+        childrenimage.pop(index)
+
+    # Add new entry if present
+    if present:
+        children.append(childid)
+
+        if image:
+            try:
+                upload_result = cloudinary.uploader.upload(image.file)
+                image_url = upload_result.get("secure_url", "null")
+            except Exception as e:
+                print("Image upload failed:", e)
+                image_url = "null"
+        else:
+            image_url = "null"
+
+        childrenimage.append(image_url)
+
+    # Save back to Firestore
+    doc_ref.set({
+        "children": children,
+        "childrenimage": childrenimage,
+    })
+
+    return {
+        "success": True,
+        "childid": childid,
+        "present": present,
+        "image": image_url if present else None
+    }
