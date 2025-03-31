@@ -954,3 +954,30 @@ def toggle_attendance(data: dict = Body(...), user=Depends(get_current_user)):
     })
 
     return {"status": new_status}
+
+@app.get("/startchatwith/{other_user_id}")
+async def start_chat_with(other_user_id: str, user=Depends(get_current_user)):
+    current_user_id = user["uid"]
+
+    if current_user_id == other_user_id:
+        raise HTTPException(status_code=400, detail="Cannot start chat with yourself.")
+
+    chats_ref = db.collection("chat")
+
+    # 🔍 Check if chat already exists (bi-directionally)
+    existing_query1 = chats_ref.where("userID1", "==", current_user_id).where("userID2", "==", other_user_id).stream()
+    existing_query2 = chats_ref.where("userID1", "==", other_user_id).where("userID2", "==", current_user_id).stream()
+
+    for doc in list(existing_query1) + list(existing_query2):
+        return {"id": doc.id}  # ✅ Return existing chat ID
+
+    # 🆕 Create new chat document
+    new_chat_ref = chats_ref.document()
+    new_chat_ref.set({
+        "userID1": current_user_id,
+        "userID2": other_user_id,
+        "lastMessage": "",
+        "lastUpdated": datetime.now(),
+    })
+
+    return {"id": new_chat_ref.id}

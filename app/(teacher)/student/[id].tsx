@@ -45,18 +45,51 @@ export default function StudentProfileScreen() {
 
       if (fRes.ok) {
         const fData = await fRes.json();
-        setFather(fData);
+        setFather({ ...fData, userid: data.fatherid }); // ✅ attach father ID
       }
       if (mRes.ok) {
         const mData = await mRes.json();
-        setMother(mData);
+        setMother({ ...mData, userid: data.motherid }); // ✅ attach mother ID
       }
+
       setLoading(false);
     };
     fetchData();
   }, [id]);
 
-  const renderProfileImage = (uri) =>
+  const handleChat = async (parentId: string) => {
+    if (!parentId) return;
+
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+      const token = await user.getIdToken();
+
+      const res = await fetch(`${apiURL}/startchatwith/${parentId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("Failed to start chat");
+      const data = await res.json();
+
+      router.push({
+        pathname: "/chat/[id]",
+        params: { id: data.id },
+      });
+    } catch (err) {
+      console.error("❌ Error starting chat:", err);
+    }
+  };
+
+  const handleContactInfo = (parentId: string) => {
+    if (!parentId) return;
+    router.push({
+      pathname: "/(teacher)/profile/otherContact",
+      params: { id: parentId },
+    });
+  };
+
+  const renderProfileImage = (uri: string) =>
     !uri || uri === "" ? (
       <ProfilePic width={48} height={48} />
     ) : (
@@ -86,7 +119,9 @@ export default function StudentProfileScreen() {
           )}
         </View>
 
-        <Text className="text-xl font-bold text-center text-[#2A2E43]">{child.name}</Text>
+        <Text className="text-xl font-bold text-center text-[#2A2E43]">
+          {child.name}
+        </Text>
         <Text className="text-center text-[#2A2E43] mt-1">{child.school}</Text>
         <Text className="text-center text-[#2A2E43] mt-1">
           Class: {child.class}   Grade: {child.grade}
@@ -106,8 +141,12 @@ export default function StudentProfileScreen() {
                 </Text>
               </View>
               <View>
-                <Text className="text-blue-600 mb-1">Chat</Text>
-                <Text className="text-blue-600">Contact Info</Text>
+                <TouchableOpacity onPress={() => handleChat(p.userid)}>
+                  <Text className="text-blue-600 mb-1">Chat</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleContactInfo(p.userid)}>
+                  <Text className="text-blue-600">Contact Info</Text>
+                </TouchableOpacity>
               </View>
             </View>
           ) : null
