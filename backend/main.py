@@ -851,3 +851,33 @@ def toggle_announcement_status(announcement_id: str, user=Depends(get_current_us
     new_status = "closed" if data["status"] == "open" else "open"
     doc_ref.update({"status": new_status})
     return {"status": new_status}
+
+@app.patch("/homework/{homework_id}/toggle")
+def toggle_homework_status(homework_id: str, user=Depends(get_current_user)):
+    doc_ref = db.collection("homework").document(homework_id)
+    doc = doc_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Homework not found")
+
+    data = doc.to_dict()
+
+    # Optional: Only allow the teacher who created it to toggle
+    if data.get("teacherid") != user["uid"]:
+        raise HTTPException(status_code=403, detail="Not allowed")
+
+    new_status = "closed" if data["status"] == "open" else "open"
+    doc_ref.update({"status": new_status})
+    return {"status": new_status}
+
+@app.get("/homework/{classid}")
+def get_homework_by_class(classid: str, user=Depends(get_current_user)):
+    homework_docs = db.collection("homework").where("classid", "==", classid).stream()
+    result = []
+
+    for doc in homework_docs:
+        hw = doc.to_dict()
+        hw["id"] = doc.id
+        result.append(hw)
+
+    return result
