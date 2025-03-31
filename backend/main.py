@@ -728,3 +728,31 @@ async def update_attendance(
         "present": present,
         "image": image_url if present else None
     }
+
+@app.get("/classesof/{user_id}")
+def get_classes_of_user(user_id: str, user=Depends(get_current_user)):
+    print(f"🔍 Looking for classes for user ID: {user_id}")
+    classes_ref = db.collection("class")
+
+    form_teacher_query = classes_ref.where("teacherId", "==", user_id).stream()
+    sub_teacher_query = classes_ref.where("subteachers", "array_contains", user_id).stream()
+
+    result = []
+    seen = set()
+
+    for doc in form_teacher_query:
+        data = doc.to_dict()
+        data["id"] = doc.id
+        data["role"] = "Form Teacher"
+        result.append(data)
+        seen.add(doc.id)
+
+    for doc in sub_teacher_query:
+        if doc.id not in seen:
+            data = doc.to_dict()
+            data["id"] = doc.id
+            data["role"] = "Teacher"
+            result.append(data)
+
+    print(f"📦 Total classes returned for {user_id}: {len(result)}")
+    return result
