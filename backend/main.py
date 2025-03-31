@@ -881,3 +881,39 @@ def get_homework_by_class(classid: str, user=Depends(get_current_user)):
         result.append(hw)
 
     return result
+
+@app.post("/attendance/toggle")
+def toggle_attendance(data: dict = Body(...), user=Depends(get_current_user)):
+    childid = data.get("childid")
+    date = data.get("date")  # e.g. "01042025"
+
+    if not childid or not date:
+        raise HTTPException(status_code=400, detail="Missing childid or date")
+
+    doc_ref = db.collection("attendance").document(date)
+    doc = doc_ref.get()
+
+    children = []
+    childrenimage = []
+
+    if doc.exists:
+        data = doc.to_dict()
+        children = data.get("children", [])
+        childrenimage = data.get("childrenimage", [])
+
+    if childid in children:
+        index = children.index(childid)
+        children.pop(index)
+        childrenimage.pop(index)
+        new_status = "absent"
+    else:
+        children.append(childid)
+        childrenimage.append("null")  # Default placeholder
+        new_status = "present"
+
+    doc_ref.set({
+        "children": children,
+        "childrenimage": childrenimage,
+    })
+
+    return {"status": new_status}

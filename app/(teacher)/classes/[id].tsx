@@ -39,7 +39,7 @@ export default function ClassDetailScreen() {
 
   const fetchAttendance = async (childIds) => {
     const today = new Date();
-    const docId = today.toLocaleDateString("en-GB").split("/").join(""); // e.g. 30032025
+    const docId = today.toLocaleDateString("en-GB").split("/").join(""); // e.g. 01042025
     const token = await auth.currentUser.getIdToken();
 
     try {
@@ -57,7 +57,7 @@ export default function ClassDetailScreen() {
       const presentIds = new Set(data.map((d) => d.childid));
       const map = {};
       childIds.forEach((id) => {
-        map[id] = presentIds.has(id); // present: true, else false
+        map[id] = presentIds.has(id);
       });
 
       setAttendanceMap(map);
@@ -66,6 +66,36 @@ export default function ClassDetailScreen() {
       setAttendanceMap({});
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleAttendance = async (childid) => {
+    const today = new Date();
+    const docId = today.toLocaleDateString("en-GB").split("/").join(""); // DDMMYYYY
+    const token = await auth.currentUser.getIdToken();
+
+    try {
+      const res = await fetch(`${apiURL}/attendance/toggle`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          childid,
+          date: docId,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Toggle failed");
+
+      const result = await res.json();
+      setAttendanceMap((prev) => ({
+        ...prev,
+        [childid]: result.status === "present",
+      }));
+    } catch (err) {
+      console.error("Failed to toggle attendance:", err);
     }
   };
 
@@ -78,7 +108,11 @@ export default function ClassDetailScreen() {
       attendanceMap.hasOwnProperty(item.id) ? attendanceMap[item.id] : false;
 
     return (
-      <View className="flex-row justify-between items-center py-4 px-3 bg-white rounded-xl mb-3 shadow-sm">
+      <TouchableOpacity
+        onPress={() => handleToggleAttendance(item.id)}
+        activeOpacity={0.9}
+        className="flex-row justify-between items-center py-4 px-3 bg-white rounded-xl mb-3 shadow-sm"
+      >
         <View className="flex-row items-center space-x-3 flex-1">
           {item.profilepic ? (
             <Image
@@ -105,26 +139,19 @@ export default function ClassDetailScreen() {
           </View>
         </View>
 
-        <View className="space-y-2 items-end">
-          <TouchableOpacity
-            className="px-4 py-1 border border-gray-400 rounded-full"
-            onPress={() =>
-              router.push({
-                pathname: "/(teacher)/student/[id]",
-                params: { id: item.id },
-              })
-            }
-          >
-            <Text className="text-gray-600 text-sm font-semibold">Profile</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity className="px-4 py-1 bg-primary-400 rounded-full">
-            <Text className="text-white text-sm font-semibold">
-              Take Attendance
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+        <TouchableOpacity
+          className="px-4 py-1 border border-gray-400 rounded-full"
+          onPress={(e) => {
+            e.stopPropagation();
+            router.push({
+              pathname: "/(teacher)/student/[id]",
+              params: { id: item.id },
+            });
+          }}
+        >
+          <Text className="text-gray-600 text-sm font-semibold">Profile</Text>
+        </TouchableOpacity>
+      </TouchableOpacity>
     );
   };
 
@@ -134,7 +161,7 @@ export default function ClassDetailScreen() {
         {name}
       </Text>
 
-      {/* 🔹 NEW TOP BUTTONS */}
+      {/* 🔹 Top Buttons */}
       <View className="flex-row justify-between space-x-3 mb-4">
         <TouchableOpacity
           className="flex-1 bg-white px-4 py-2 rounded-xl shadow-sm border border-primary-400 items-center"
@@ -161,7 +188,7 @@ export default function ClassDetailScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* 🔹 EXISTING MIDDLE BUTTONS */}
+      {/* 🔹 Middle Buttons */}
       <View className="flex-row justify-between mb-4 space-x-3">
         <TouchableOpacity
           className="flex-1 bg-primary-400 px-4 py-2 rounded-xl shadow-sm items-center"
@@ -188,6 +215,7 @@ export default function ClassDetailScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* 🔍 Search */}
       <TextInput
         placeholder="Search for someone"
         value={search}
@@ -195,6 +223,7 @@ export default function ClassDetailScreen() {
         className="bg-white px-4 py-3 rounded-xl border border-gray-200 mb-4 text-base"
       />
 
+      {/* 👇 Student List */}
       {loading ? (
         <ActivityIndicator size="large" color="#999" className="mt-10" />
       ) : (
