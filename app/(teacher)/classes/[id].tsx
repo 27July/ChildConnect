@@ -106,13 +106,17 @@ export default function ClassDetailScreen() {
         </View>
 
         <View className="space-y-2 items-end">
-        <TouchableOpacity
-  className="px-4 py-1 border border-gray-400 rounded-full"
-  onPress={() => router.push({ pathname: "/(teacher)/student/[id]", params: { id: item.id } })}
->
-  <Text className="text-gray-600 text-sm font-semibold">Profile</Text>
-</TouchableOpacity>
-
+          <TouchableOpacity
+            className="px-4 py-1 border border-gray-400 rounded-full"
+            onPress={() =>
+              router.push({
+                pathname: "/(teacher)/student/[id]",
+                params: { id: item.id },
+              })
+            }
+          >
+            <Text className="text-gray-600 text-sm font-semibold">Profile</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity className="px-4 py-1 bg-primary-400 rounded-full">
             <Text className="text-white text-sm font-semibold">
@@ -130,28 +134,57 @@ export default function ClassDetailScreen() {
         {name}
       </Text>
 
-      <View className="flex-row justify-between mb-4 space-x-3">
-      <TouchableOpacity
-        className="flex-1 bg-primary-400 px-4 py-2 rounded-xl shadow-sm items-center"
-        onPress={() =>
-          router.push({
-            pathname: "/(teacher)/classes/addHomework",
-            params: { id }, // this is the class id
-          })
-        }
-      >
-        <Text className="text-white font-semibold">Assign Homework</Text>
-      </TouchableOpacity>
+      {/* 🔹 NEW TOP BUTTONS */}
+      <View className="flex-row justify-between space-x-3 mb-4">
+        <TouchableOpacity
+          className="flex-1 bg-white px-4 py-2 rounded-xl shadow-sm border border-primary-400 items-center"
+          onPress={() =>
+            router.push({
+              pathname: "/(teacher)/profile/homeworkList",
+              params: { id },
+            })
+          }
+        >
+          <Text className="text-primary-400 font-semibold">Homework List</Text>
+        </TouchableOpacity>
 
-        <TouchableOpacity className="flex-1 bg-primary-400 px-4 py-2 rounded-xl shadow-sm items-center"
-                onPress={() =>
-                  router.push({
-                    pathname: "/(teacher)/profile/addAnnouncement",
-                    params: { id }, // this is the class id
-                  })
-                }>
+        <TouchableOpacity
+          className="flex-1 bg-white px-4 py-2 rounded-xl shadow-sm border border-primary-400 items-center"
+          onPress={() =>
+            router.push({
+              pathname: "/(teacher)/profile/announcementList",
+              params: { id },
+            })
+          }
+        >
+          <Text className="text-primary-400 font-semibold">Announcement List</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* 🔹 EXISTING MIDDLE BUTTONS */}
+      <View className="flex-row justify-between mb-4 space-x-3">
+        <TouchableOpacity
+          className="flex-1 bg-primary-400 px-4 py-2 rounded-xl shadow-sm items-center"
+          onPress={() =>
+            router.push({
+              pathname: "/(teacher)/classes/addHomework",
+              params: { id },
+            })
+          }
+        >
+          <Text className="text-white font-semibold">Assign Homework</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          className="flex-1 bg-primary-400 px-4 py-2 rounded-xl shadow-sm items-center"
+          onPress={() =>
+            router.push({
+              pathname: "/(teacher)/profile/addAnnouncement",
+              params: { id },
+            })
+          }
+        >
           <Text className="text-white font-semibold">Add Announcement</Text>
-          
         </TouchableOpacity>
       </View>
 

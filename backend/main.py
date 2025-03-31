@@ -814,7 +814,6 @@ def get_announcements_for_class(classid: str, user=Depends(get_current_user)):
     announcements = (
         db.collection("announcements")
         .where("classid", "==", classid)
-        .order_by("created", direction=firestore.Query.DESCENDING)
         .stream()
     )
 
@@ -826,6 +825,7 @@ def get_announcements_for_class(classid: str, user=Depends(get_current_user)):
 
     return result
 
+
 @app.get("/class/{class_id}")
 def get_class_by_id(class_id: str, user=Depends(get_current_user)):
     class_doc = db.collection("class").document(class_id).get()
@@ -833,3 +833,21 @@ def get_class_by_id(class_id: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="Class not found")
 
     return class_doc.to_dict() | {"id": class_doc.id}
+
+@app.patch("/announcements/{announcement_id}/toggle")
+def toggle_announcement_status(announcement_id: str, user=Depends(get_current_user)):
+    doc_ref = db.collection("announcements").document(announcement_id)
+    doc = doc_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Announcement not found")
+
+    data = doc.to_dict()
+
+    # Optional: only allow the teacher who created it to toggle
+    if data.get("teacheruserid") != user["uid"]:
+        raise HTTPException(status_code=403, detail="Not allowed")
+
+    new_status = "closed" if data["status"] == "open" else "open"
+    doc_ref.update({"status": new_status})
+    return {"status": new_status}
