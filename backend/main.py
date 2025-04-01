@@ -23,8 +23,6 @@ from schools_route import router as schools_router
 from schoolofchild_route import router as school_of_child_router
 
 
-
-
 cloudinary.config(
     cloud_name="dqatmjayu",       # replace this
     api_key="834117339387158",             # replace this

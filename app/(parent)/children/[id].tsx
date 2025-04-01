@@ -56,11 +56,19 @@ export default function ChildDetailScreen() {
   const apiURL = `http://${ip}:8000`;
   const hasFetchedAttendance = React.useRef(false);
 
-  const SCHOOL_LOCATION = {
-    latitude: 1.3462227582931519,
-    longitude: 103.68243408203125,
-    radius: 200,
-  };
+  //Dynamic school location
+  const [schoolLocation, setSchoolLocation] = useState<{
+    latitude: number;
+    longitude: number;
+    radius: number;
+  } | null>(null);
+
+  //Static school location for testing purposes
+  // const SCHOOL_LOCATION = {
+  //   latitude: 1.3462227582931519,
+  //   longitude: 103.68243408203125,
+  //   radius: 200,
+  // };
 
   // ───────────────────────────────────────────────────────────────────────────
   // 1) DEFINE fetchTodayAttendance HERE, ABOVE THE USEEFFECT
@@ -81,9 +89,12 @@ export default function ChildDetailScreen() {
       const token = await user.getIdToken();
       const today = getTodayDateString();
 
-      const res = await fetch(`${apiURL}/attendance/${today}?childid=${childId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `${apiURL}/attendance/${today}?childid=${childId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       console.log("✅ Attendance response:", res.status);
 
       if (res.ok) {
@@ -126,6 +137,7 @@ export default function ChildDetailScreen() {
 
       await fetchChildData();
       await fetchChildLocationFromBackend();
+      await fetchSchoolLocation();
 
       // ✅ Only fetch attendance once
       if (
@@ -162,12 +174,9 @@ export default function ChildDetailScreen() {
       const childData = await childRes.json();
       setChild(childData);
 
-      const classRes = await fetch(
-        `${apiURL}/classbyname/${childData.class}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const classRes = await fetch(`${apiURL}/classbyname/${childData.class}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const classData = await classRes.json();
 
       const teacherEntries = [
@@ -240,8 +249,9 @@ export default function ChildDetailScreen() {
         setIsTracking(data.istracking);
       }
 
-      const distance = calculateDistance(data, SCHOOL_LOCATION);
-      setIsPresent(distance <= SCHOOL_LOCATION.radius);
+      //For location based attendance -- NOT TO BE IMPLEMENTED
+      // const distance = calculateDistance(data, schoolLocation);
+      // setIsPresent(distance <= schoolLocation.radius);
 
       if (data.timestamp) {
         const time = new Date(data.timestamp);
@@ -252,13 +262,39 @@ export default function ChildDetailScreen() {
     }
   };
 
+  // Fetch school location from backend
+  const fetchSchoolLocation = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    const token = await user.getIdToken();
+
+    try {
+      const res = await fetch(`${apiURL}/school/child/${childId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch school location");
+
+      const data = await res.json();
+      console.log("📬 Full school API response:", data);
+      setSchoolLocation({
+        latitude: data.latitude,
+        longitude: data.longitude,
+        radius: 200, // You can replace this with a field from the API if you include it later
+      });
+      console.log("📍 School Location Set:", data.latitude, data.longitude);
+    } catch (error) {
+      console.error("Error fetching school location:", error);
+    }
+  };
+
   useEffect(() => {
     if (mapRef.current && location && childBackendLocation) {
       mapRef.current.fitToCoordinates(
         [
           { latitude: location.latitude, longitude: location.longitude },
           childBackendLocation,
-          SCHOOL_LOCATION,
+          schoolLocation,
         ],
         {
           edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
@@ -476,7 +512,10 @@ export default function ChildDetailScreen() {
 
               setIsTracking(!isTracking);
             } catch (err) {
-              Alert.alert("Tracking Error", "Failed to toggle location tracking.");
+              Alert.alert(
+                "Tracking Error",
+                "Failed to toggle location tracking."
+              );
             }
           }}
         >
@@ -503,12 +542,16 @@ export default function ChildDetailScreen() {
               <MapView
                 ref={mapRef}
                 style={{ flex: 1 }}
-                initialRegion={{
-                  latitude: childBackendLocation.latitude,
-                  longitude: childBackendLocation.longitude,
-                  latitudeDelta: 0.01,
-                  longitudeDelta: 0.01,
-                }}
+                initialRegion={
+                  schoolLocation
+                    ? {
+                        latitude: schoolLocation.latitude,
+                        longitude: schoolLocation.longitude,
+                        latitudeDelta: 0.01,
+                        longitudeDelta: 0.01,
+                      }
+                    : undefined
+                }
               >
                 {/* Custom Child Pin */}
                 <Marker coordinate={childBackendLocation}>
@@ -561,29 +604,37 @@ export default function ChildDetailScreen() {
                 </Marker>
 
                 {/* Custom School Pin */}
-                <Marker coordinate={SCHOOL_LOCATION}>
-                  <View
-                    style={{
-                      backgroundColor: "white",
-                      padding: 6,
-                      borderRadius: 999,
-                      elevation: 5,
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.25,
-                      shadowRadius: 3.5,
-                    }}
-                  >
-                    <Image
-                      source={schoolPin}
-                      style={{ width: 40, height: 40 }}
-                      resizeMode="contain"
-                    />
-                  </View>
-                  <Callout>
-                    <Text>School</Text>
-                  </Callout>
-                </Marker>
+                {schoolLocation?.latitude != null &&
+                  schoolLocation?.longitude != null && (
+                    <Marker
+                      coordinate={{
+                        latitude: schoolLocation.latitude,
+                        longitude: schoolLocation.longitude,
+                      }}
+                    >
+                      <View
+                        style={{
+                          backgroundColor: "white",
+                          padding: 6,
+                          borderRadius: 999,
+                          elevation: 5,
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.25,
+                          shadowRadius: 3.5,
+                        }}
+                      >
+                        <Image
+                          source={schoolPin}
+                          style={{ width: 40, height: 40 }}
+                          resizeMode="contain"
+                        />
+                      </View>
+                      <Callout>
+                        <Text>School</Text>
+                      </Callout>
+                    </Marker>
+                  )}
               </MapView>
             ) : (
               <Text className="text-center text-red-500 mt-4">
@@ -603,8 +654,8 @@ export default function ChildDetailScreen() {
                 childLng: childBackendLocation.longitude,
                 userLat: location.latitude,
                 userLng: location.longitude,
-                schoolLat: 1.3462227582931519,
-                schoolLng: 103.68243408203125,
+                schoolLat: schoolLocation?.latitude,
+                schoolLng: schoolLocation?.longitude,
               },
             })
           }
