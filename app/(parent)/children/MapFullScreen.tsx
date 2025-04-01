@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { View, Text, Image } from "react-native";
 import MapView, { Marker, Callout } from "react-native-maps";
 import { useLocalSearchParams } from "expo-router";
@@ -31,9 +31,30 @@ export default function MapFullScreen() {
     longitude: Number(schoolLng),
   };
 
+  const mapRef = useRef(null);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (
+        mapRef.current &&
+        childCoord?.latitude &&
+        userCoord?.latitude &&
+        schoolCoord?.latitude
+      ) {
+        mapRef.current.fitToCoordinates([childCoord, userCoord, schoolCoord], {
+          edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+          animated: true,
+        });
+      }
+    }, 500); // 0.5 second delay
+
+    return () => clearTimeout(timeout);
+  }, [childLat, childLng, userLat, userLng, schoolLat, schoolLng]);
+
   return (
     <View style={{ flex: 1 }}>
       <MapView
+        ref={mapRef}
         style={{ flex: 1 }}
         initialRegion={{
           latitude: childCoord.latitude,

@@ -288,8 +288,9 @@ export default function ChildDetailScreen() {
     }
   };
 
+  //Fit all 3 corrdinates in the map
   useEffect(() => {
-    if (mapRef.current && location && childBackendLocation) {
+    if (mapRef.current && location && childBackendLocation && schoolLocation) {
       mapRef.current.fitToCoordinates(
         [
           { latitude: location.latitude, longitude: location.longitude },
@@ -302,7 +303,7 @@ export default function ChildDetailScreen() {
         }
       );
     }
-  }, [location, childBackendLocation]);
+  }, [location, childBackendLocation, schoolLocation]);
 
   useEffect(() => {
     return () => {
