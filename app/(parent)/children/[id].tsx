@@ -23,7 +23,8 @@ import {
   startForegroundTracking,
   stopForegroundTracking,
 } from "../../../components/ChildLocationTracker";
-import { ShieldUser } from "lucide-react-native";
+import { ShieldUser, KeyRound } from "lucide-react-native";
+import PasswordChangeModal from "./PasswordChangeModal";
 
 // Custom pin images
 const childPin = require("../../../assets/map_pins/child-pin.png");
@@ -36,7 +37,6 @@ export default function ChildDetailScreen() {
 
   const router = useRouter();
   const navigation = useNavigation();
-
   const [child, setChild] = useState<any>(null);
   const [teachers, setTeachers] = useState<any[]>([]);
   const [childBackendLocation, setChildBackendLocation] = useState<any>(null);
@@ -50,25 +50,47 @@ export default function ChildDetailScreen() {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [locationIntervalId, setLocationIntervalId] =
     useState<NodeJS.Timeout | null>(null);
-
   const mapRef = React.useRef<MapView | null>(null);
-
   const apiURL = `http://${ip}:8000`;
   const hasFetchedAttendance = React.useRef(false);
-
+  const [showModal, setShowModal] = useState(false);
   //Dynamic school location
   const [schoolLocation, setSchoolLocation] = useState<{
     latitude: number;
     longitude: number;
     radius: number;
   } | null>(null);
+  //For checking if password is set
+  const [hasPassword, setHasPassword] = useState<boolean | null>(null); // null = not loaded
+  const [showSetPasswordModal, setShowSetPasswordModal] = useState(false);
 
-  //Static school location for testing purposes
-  // const SCHOOL_LOCATION = {
-  //   latitude: 1.3462227582931519,
-  //   longitude: 103.68243408203125,
-  //   radius: 200,
-  // };
+  const checkPasswordExistence = async () => {
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      const res = await fetch(
+        `http://${ip}:8000/childmode-password/${childId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!res.ok) {
+        if (res.status === 404) {
+          // No password set
+          setHasPassword(false);
+          setShowSetPasswordModal(true); // 🚨 Trigger modal
+        } else {
+          throw new Error("Error fetching password");
+        }
+      } else {
+        const data = await res.json();
+        setHasPassword(true);
+        console.log("Password exists");
+      }
+    } catch (err) {
+      console.error("Error checking password existence:", err);
+    }
+  };
 
   // ───────────────────────────────────────────────────────────────────────────
   // 1) DEFINE fetchTodayAttendance HERE, ABOVE THE USEEFFECT
@@ -288,6 +310,13 @@ export default function ChildDetailScreen() {
     }
   };
 
+  //Check Password Existance
+  useEffect(() => {
+    if (childId) {
+      checkPasswordExistence();
+    }
+  }, [childId]);
+
   //Fit all 3 corrdinates in the map
   useEffect(() => {
     if (mapRef.current && location && childBackendLocation && schoolLocation) {
@@ -339,28 +368,7 @@ export default function ChildDetailScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-primary-50">
-      {/* Top-right button */}
-      <TouchableOpacity
-        style={{
-          position: "absolute",
-          top: 60,
-          right: 20,
-          zIndex: 10,
-          backgroundColor: "#C6E3DE",
-          padding: 10,
-          borderRadius: 50,
-        }}
-        onPress={() => {
-          router.push({
-            pathname: "../../(childmode)/[id]",
-            params: { id: childId },
-          });
-        }}
-      >
-        <ShieldUser color="#2A2E43" size={24} />
-      </TouchableOpacity>
-
+    <SafeAreaView edges={["top"]} className="flex-1 bg-primary-50">
       <ScrollView contentContainerStyle={{ padding: 20 }}>
         <View className="items-center mb-4">
           {child.profilepic ? (
@@ -376,7 +384,44 @@ export default function ChildDetailScreen() {
         <Text className="text-xl font-bold text-center text-[#2A2E43]">
           {child.name}
         </Text>
+        {/* Top-right ChildMode button */}
+        <TouchableOpacity
+          style={{
+            position: "absolute",
+            top: 20,
+            right: 20,
+            zIndex: 10,
+            backgroundColor: "#C6E3DE",
+            padding: 10,
+            borderRadius: 50,
+          }}
+          onPress={() => {
+            router.push({
+              pathname: "../../(childmode)/[id]",
+              params: { id: childId },
+            });
+          }}
+        >
+          <ShieldUser color="#2A2E43" size={24} />
+        </TouchableOpacity>
 
+        {/* Password Change Button */}
+        {child && (
+          <TouchableOpacity
+            style={{
+              position: "absolute",
+              top: 80,
+              right: 20,
+              zIndex: 10,
+              backgroundColor: "#C6E3DE",
+              padding: 10,
+              borderRadius: 50,
+            }}
+            onPress={() => setShowModal(true)} // 👈 make sure showModal state exists
+          >
+            <KeyRound color="#2A2E43" size={24} />
+          </TouchableOpacity>
+        )}
         {/* School Details Button */}
         <TouchableOpacity
           className="bg-[#C6E3DE] px-4 py-2 rounded-full mt-2"
@@ -666,6 +711,19 @@ export default function ChildDetailScreen() {
           </Text>
         </TouchableOpacity>
       </ScrollView>
+      <PasswordChangeModal
+        visible={showModal}
+        onClose={() => setShowModal(false)}
+        childId={child.id}
+      />
+      {showSetPasswordModal && (
+        <PasswordChangeModal
+          visible={true}
+          onClose={() => setShowSetPasswordModal(false)}
+          childId={child.id}
+          mode="set" // Optional: You can pass a prop to indicate this is a first-time setup
+        />
+      )}
     </SafeAreaView>
   );
 }

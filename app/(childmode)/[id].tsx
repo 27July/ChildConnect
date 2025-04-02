@@ -21,7 +21,6 @@ import { ip } from "@/utils/server_ip.json";
 import { useFocusEffect } from "@react-navigation/native";
 import { getFirestore, doc, onSnapshot, updateDoc } from "firebase/firestore";
 
-const PRESET_EXIT_CODE = "1234";
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
 export default function ChildModeScreen() {
@@ -32,6 +31,7 @@ export default function ChildModeScreen() {
   const [isModalVisible, setModalVisible] = useState(false);
   const [exitCode, setExitCode] = useState("");
   const [isTracking, setIsTracking] = useState(false);
+  const [actualPassword, setActualPassword] = useState("");
 
   // Lock gestures while in child mode
   useFocusEffect(
@@ -53,6 +53,32 @@ export default function ChildModeScreen() {
       return "Invalid date";
     }
   };
+
+  //Fetch the actual password from the server
+  useEffect(() => {
+    const fetchPassword = async () => {
+      try {
+        const token = await auth.currentUser?.getIdToken();
+        const res = await fetch(
+          `http://${ip}:8000/childmode-password/${childId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!res.ok) throw new Error("Failed to fetch password");
+        const data = await res.json();
+        setActualPassword(data.password);
+      } catch (err) {
+        console.error("❌ Could not fetch child mode password:", err);
+        Alert.alert("Error", "Unable to fetch child mode password.");
+      }
+    };
+
+    fetchPassword();
+  }, [childId]);
 
   // Listen to real-time tracking status
   useEffect(() => {
@@ -145,7 +171,7 @@ export default function ChildModeScreen() {
   }, [childId]);
 
   const handleExitChildMode = async () => {
-    if (exitCode === PRESET_EXIT_CODE) {
+    if (exitCode === actualPassword) {
       try {
         await stopForegroundTracking();
         const token = await auth.currentUser?.getIdToken();
@@ -251,15 +277,29 @@ export default function ChildModeScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Enter Exit Code</Text>
+
+            {/* Hidden TextInput */}
             <TextInput
-              style={styles.inputBox}
-              placeholder="Enter code"
-              placeholderTextColor="#666"
-              secureTextEntry
-              keyboardType="numeric"
+              style={styles.hiddenInput}
+              keyboardType="number-pad"
+              maxLength={4}
               value={exitCode}
-              onChangeText={setExitCode}
+              onChangeText={(text) => {
+                const digits = text.replace(/\D/g, "");
+                setExitCode(digits);
+              }}
+              autoFocus
             />
+
+            {/* 4 digit boxes */}
+            <View style={styles.codeBoxes}>
+              {[0, 1, 2, 3].map((i) => (
+                <View key={i} style={styles.codeBox}>
+                  <Text style={styles.codeText}>{exitCode[i] || ""}</Text>
+                </View>
+              ))}
+            </View>
+
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={[styles.modalButton, { backgroundColor: "#285E5E" }]}
@@ -397,5 +437,31 @@ const styles = StyleSheet.create({
     color: "#285E5E",
     fontWeight: "600",
     fontSize: 14,
+  },
+  hiddenInput: {
+    height: 0,
+    width: 0,
+    opacity: 0,
+  },
+  codeBoxes: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginVertical: 20,
+  },
+  codeBox: {
+    width: 50,
+    height: 50,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    marginHorizontal: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F3F4F6",
+  },
+  codeText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
   },
 });

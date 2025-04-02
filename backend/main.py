@@ -21,6 +21,7 @@ from location_routes import router as location_router
 from homework_route import router as homework_router
 from schools_route import router as schools_router
 from schoolofchild_route import router as school_of_child_router
+from child_mode_auth_route import router as childmode_router
 
 
 cloudinary.config(
@@ -51,6 +52,7 @@ app.include_router(location_router)
 app.include_router(schools_router)
 app.include_router(homework_router)
 app.include_router(school_of_child_router)
+app.include_router(childmode_router)
 
 
 
