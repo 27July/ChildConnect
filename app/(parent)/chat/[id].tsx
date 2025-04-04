@@ -25,6 +25,7 @@ export default function ChatScreen() {
   const [imageBase64, setImageBase64] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [refreshing, setRefreshing] = useState(false); // ✅ Pull-to-refresh
   const [otherUserProfile, setOtherUserProfile] = useState(null);
   const apiURL = `http://${ip}:8000`;
   const flatListRef = useRef();
@@ -35,6 +36,15 @@ export default function ChatScreen() {
     fetchOtherUserProfile();
   }, [chatId]);
 
+  // ✅ Scroll to bottom on new messages
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages]);
+
   const fetchMessages = async () => {
     const token = await auth.currentUser.getIdToken();
     const res = await fetch(`${apiURL}/findspecificchat/${chatId}`, {
@@ -43,6 +53,13 @@ export default function ChatScreen() {
     const data = await res.json();
     setMessages(data.sort((a, b) => a.timestamp._seconds - b.timestamp._seconds));
     setLoading(false);
+    setRefreshing(false); // ✅ Stop refresh after fetching
+  };
+
+  // ✅ Pull-to-refresh handler
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchMessages();
   };
 
   const fetchOtherUserProfile = async () => {
@@ -193,6 +210,9 @@ export default function ChatScreen() {
               </View>
             ) : null
           }
+          // ✅ Added props
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
         />
 
         <View
