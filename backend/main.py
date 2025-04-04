@@ -115,6 +115,7 @@ async def get_profile(user=Depends(get_current_user)):
         "email": profile.get("email"),
         "role": profile.get("role"),  # ✅ this is the key piece
         "name": profile.get("name"),
+        "profilepic": profile.get("profilepic", ""),
         "message": f"Hello, {profile.get('name', 'User')}"
     }
 @app.post("/registerparent")

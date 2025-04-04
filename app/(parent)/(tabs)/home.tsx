@@ -47,19 +47,19 @@ export default function HomeScreen() {
       Alert.alert("Error", "No user logged in.");
       return;
     }
-
+  
     try {
       setRefreshing(true);
       const token = await user.getIdToken();
-
-      // 🔹 Profile picture
+  
+      // ✅ Profile picture
       const profileRes = await fetch(`${apiURL}/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const profileData = await profileRes.json();
-      setProfilePic(profileData.profilepic || null);
-
-      // 🔹 Announcements
+      setProfilePic(profileData.profilepic || null); // ✅ only this sets profilePic
+  
+      // ✅ Announcements
       const annRes = await fetch(`${apiURL}/homeparentinfo`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -68,8 +68,8 @@ export default function HomeScreen() {
         ...ann,
         type: "announcement",
       }));
-
-      // 🔹 Unread Chats
+  
+      // ✅ Unread Chats
       const chatRes = await fetch(`${apiURL}/findchats`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -80,7 +80,7 @@ export default function HomeScreen() {
           ...chat,
           type: "chat",
         }));
-
+  
       setCombinedItems([...announcements, ...unreadChats]);
     } catch (err: any) {
       console.error("❌ Home fetch error:", err.message);
@@ -89,6 +89,7 @@ export default function HomeScreen() {
       setRefreshing(false);
     }
   };
+  
 
   useFocusEffect(
     useCallback(() => {
