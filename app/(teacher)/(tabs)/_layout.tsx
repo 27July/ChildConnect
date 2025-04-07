@@ -68,7 +68,7 @@ export default function ParentTabLayout() {
               ),
             }}
           />
-          
+
           <Tabs.Screen
             name="profile"
             options={{

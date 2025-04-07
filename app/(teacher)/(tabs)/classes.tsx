@@ -47,18 +47,25 @@ export default function ClassesScreen() {
   const renderClassItem = ({ item }) => (
     <TouchableOpacity
       onPress={() =>
-        router.push({ pathname: "/classes/[id]", params: { id: item.id, name: item.name } })
+        router.push({
+          pathname: "/classes/[id]",
+          params: { id: item.id, name: item.name },
+        })
       }
       className="bg-white rounded-2xl p-4 mb-4 shadow-sm border border-primary-100"
     >
-      <Text className="text-lg font-semibold text-primary-400">{item.name}</Text>
+      <Text className="text-lg font-semibold text-primary-400">
+        {item.name}
+      </Text>
       <Text className="text-sm text-gray-500 mt-1">Role: {item.role}</Text>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-primary-50 px-5">
-      <Text className="text-3xl font-extrabold text-[#2A2E43] mt-6 mb-4">My Classes</Text>
+    <View className="flex-1 bg-primary-50 p-5">
+      <Text className="text-3xl font-extrabold text-[#2A2E43] mb-4">
+        My Classes
+      </Text>
       {loading ? (
         <ActivityIndicator size="large" color="#999" />
       ) : (
@@ -69,6 +76,6 @@ export default function ClassesScreen() {
           contentContainerStyle={{ paddingBottom: 20 }}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }

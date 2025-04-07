@@ -126,7 +126,7 @@ export default function Profile() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-primary-50 px-5">
+    <View className="flex-1 bg-primary-50 p-5">
       <Modal visible={showImageModal} transparent animationType="fade">
         <Pressable
           onPress={() => setShowImageModal(false)}
@@ -145,7 +145,9 @@ export default function Profile() {
       </Modal>
 
       <View className="flex-row justify-between items-center mt-6 mb-4">
-        <Text className="text-3xl font-extrabold text-[#2A2E43]">My Profile</Text>
+        <Text className="text-3xl font-extrabold text-[#2A2E43]">
+          My Profile
+        </Text>
         <TouchableOpacity onPress={() => setEditing(!editing)}>
           <Text className="text-primary-400 font-semibold text-base">
             {editing ? "Cancel" : "Edit"}
@@ -183,55 +185,57 @@ export default function Profile() {
           {editing && (
             <TouchableOpacity onPress={pickImage}>
               <Text className="text-primary-400 underline mt-2">
-                {editableUserData.profilepic ? "Change" : "Upload"} Profile Picture
+                {editableUserData.profilepic ? "Change" : "Upload"} Profile
+                Picture
               </Text>
             </TouchableOpacity>
           )}
         </View>
 
         <View className="bg-white rounded-2xl px-5 py-6 shadow-sm border border-primary-100">
-          {[
-            "name",
-            "email",
-            "phone",
-            "workPhone",
-            "address",
-          ].map((field, index) => {
-            const isReadOnly = field === "name" || field === "email";
-            const label =
-              field === "workPhone"
-                ? "Work Phone"
-                : field.charAt(0).toUpperCase() + field.slice(1);
+          {["name", "email", "phone", "workPhone", "address"].map(
+            (field, index) => {
+              const isReadOnly = field === "name" || field === "email";
+              const label =
+                field === "workPhone"
+                  ? "Work Phone"
+                  : field.charAt(0).toUpperCase() + field.slice(1);
 
-            return (
-              <AnimatePresence key={field}>
-                <MotiView
-                  from={{ opacity: 0, translateY: 10 }}
-                  animate={{ opacity: 1, translateY: 0 }}
-                  transition={{ delay: index * 50, type: "timing" }}
-                  className="mb-5"
-                >
-                  <Text className="text-gray-700 font-medium mb-1">{label}</Text>
-                  <TextInput
-                    editable={!isReadOnly && editing}
-                    value={editableUserData[field] || ""}
-                    onChangeText={(val) =>
-                      setEditableUserData((prev: any) => ({ ...prev, [field]: val }))
-                    }
-                    placeholder={`Enter ${label}`}
-                    placeholderTextColor="#B0B0B0"
-                    className={`px-4 py-3 rounded-xl text-base ${
-                      isReadOnly
-                        ? "bg-primary-100 text-gray-400"
-                        : editing
-                        ? "bg-white border border-primary-300 text-gray-800"
-                        : "bg-primary-50 text-gray-800"
-                    }`}
-                  />
-                </MotiView>
-              </AnimatePresence>
-            );
-          })}
+              return (
+                <AnimatePresence key={field}>
+                  <MotiView
+                    from={{ opacity: 0, translateY: 10 }}
+                    animate={{ opacity: 1, translateY: 0 }}
+                    transition={{ delay: index * 50, type: "timing" }}
+                    className="mb-5"
+                  >
+                    <Text className="text-gray-700 font-medium mb-1">
+                      {label}
+                    </Text>
+                    <TextInput
+                      editable={!isReadOnly && editing}
+                      value={editableUserData[field] || ""}
+                      onChangeText={(val) =>
+                        setEditableUserData((prev: any) => ({
+                          ...prev,
+                          [field]: val,
+                        }))
+                      }
+                      placeholder={`Enter ${label}`}
+                      placeholderTextColor="#B0B0B0"
+                      className={`px-4 py-3 rounded-xl text-base ${
+                        isReadOnly
+                          ? "bg-primary-100 text-gray-400"
+                          : editing
+                          ? "bg-white border border-primary-300 text-gray-800"
+                          : "bg-primary-50 text-gray-800"
+                      }`}
+                    />
+                  </MotiView>
+                </AnimatePresence>
+              );
+            }
+          )}
         </View>
 
         {editing && (
@@ -266,6 +270,6 @@ export default function Profile() {
           )}
         </AnimatePresence>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

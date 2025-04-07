@@ -62,9 +62,12 @@ export default function ChatList() {
             chat.userID1 === user.uid ? chat.userID2 : chat.userID1;
 
           try {
-            const childrenRes = await fetch(`${apiURL}/childrenof/${otherUserId}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
+            const childrenRes = await fetch(
+              `${apiURL}/childrenof/${otherUserId}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
             const children = await childrenRes.json();
 
             const relevantChildren = children.filter((child) =>
@@ -82,8 +85,10 @@ export default function ChatList() {
       );
 
       const sorted = enrichedChats.sort((a, b) => {
-        const aTime = a.lastUpdated?._seconds || new Date(a.lastUpdated).getTime() / 1000;
-        const bTime = b.lastUpdated?._seconds || new Date(b.lastUpdated).getTime() / 1000;
+        const aTime =
+          a.lastUpdated?._seconds || new Date(a.lastUpdated).getTime() / 1000;
+        const bTime =
+          b.lastUpdated?._seconds || new Date(b.lastUpdated).getTime() / 1000;
         return bTime - aTime;
       });
       setChats(sorted);
@@ -146,10 +151,8 @@ export default function ChatList() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-primary-50 px-5">
-      <Text className="text-3xl font-extrabold text-[#2A2E43] mt-6 mb-4">
-        Chats
-      </Text>
+    <View className="flex-1 bg-primary-50 p-5">
+      <Text className="text-3xl font-extrabold text-[#2A2E43] mb-4">Chats</Text>
       {loading ? (
         <ActivityIndicator size="large" color="#999" />
       ) : (
@@ -160,6 +163,6 @@ export default function ChatList() {
           contentContainerStyle={{ paddingBottom: 20 }}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
