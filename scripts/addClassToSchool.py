@@ -9,8 +9,8 @@ firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 # === Data to add ===
-school_name = "BUKIT BATOK SECONDARY SCHOOL"
-class_id_to_add = "123"
+school_name = "RIVERVALE PRIMARY SCHOOL"
+class_id_to_add = "CKUUa9NMU6iWBbLTziCp"
 
 # === Firestore Logic ===
 school_ref = db.collection("schools").document(school_name)
