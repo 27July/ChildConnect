@@ -127,11 +127,6 @@ export default function ChatList() {
               <Text className="text-base font-semibold text-primary-400">
                 Chatting with {item.otherUserName}
               </Text>
-              {item.childNames?.length > 0 && (
-                <Text className="text-sm text-gray-500 mt-0.5">
-                  Parent of {item.childNames.join(", ")}
-                </Text>
-              )}
             </View>
             {!item.isRead && (
               <View className="bg-primary-400 px-2 py-0.5 rounded-full">

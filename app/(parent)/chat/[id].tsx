@@ -25,7 +25,7 @@ export default function ChatScreen() {
   const [imageBase64, setImageBase64] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [refreshing, setRefreshing] = useState(false); // ✅ Pull-to-refresh
+  const [refreshing, setRefreshing] = useState(false);
   const [otherUserProfile, setOtherUserProfile] = useState(null);
   const apiURL = `http://${ip}:8000`;
   const flatListRef = useRef();
@@ -36,7 +36,6 @@ export default function ChatScreen() {
     fetchOtherUserProfile();
   }, [chatId]);
 
-  // ✅ Scroll to bottom on new messages
   useEffect(() => {
     if (messages.length > 0) {
       setTimeout(() => {
@@ -53,10 +52,9 @@ export default function ChatScreen() {
     const data = await res.json();
     setMessages(data.sort((a, b) => a.timestamp._seconds - b.timestamp._seconds));
     setLoading(false);
-    setRefreshing(false); // ✅ Stop refresh after fetching
+    setRefreshing(false);
   };
 
-  // ✅ Pull-to-refresh handler
   const handleRefresh = async () => {
     setRefreshing(true);
     await fetchMessages();
@@ -124,8 +122,9 @@ export default function ChatScreen() {
     }
   };
 
+  // ✅ This must be defined BEFORE return
   const renderMessage = ({ item }) => {
-    const isMe = item.sender === auth.currentUser.uid;
+    const isMe = item.sender === auth.currentUser?.uid;
     const timestamp = item.timestamp?._seconds
       ? new Date(item.timestamp._seconds * 1000).toLocaleTimeString([], {
           hour: "2-digit",
@@ -148,7 +147,7 @@ export default function ChatScreen() {
       return null;
     };
 
-    const wasRead = item.isRead && item.receiver !== auth.currentUser.uid;
+    const wasRead = item.isRead && item.receiver !== auth.currentUser?.uid;
 
     return (
       <View className={`flex-row mb-3 ${isMe ? "justify-end" : "justify-start"}`}>
@@ -210,7 +209,6 @@ export default function ChatScreen() {
               </View>
             ) : null
           }
-          // ✅ Added props
           refreshing={refreshing}
           onRefresh={handleRefresh}
         />
