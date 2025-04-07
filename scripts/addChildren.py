@@ -11,15 +11,15 @@ db = firestore.client()
 def add_child():
     child_data = {
         #Change these values
-        "class": "1A",
+        "class": "3C",
         "fatherid": "heyFPfrs5QOBaySyTNVXVBs9fJE3",
         "fathername": "Placeholder Tan",
         "motherid": "heyFPfrs5QOBaySyTNVXVBs9fJE3",
         "mothername": "Placeholder Tan",
-        "name" : "Yunjin Tan",
+        "name" : "Zeckkk Tan",
         "documents" : [],
         "profilepic": "",
-        "grade": "Primary 1",
+        "grade": "Primary 3",
         "school": "ANDERSON PRIMARY SCHOOL"
     }
 
