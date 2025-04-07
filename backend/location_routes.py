@@ -80,3 +80,29 @@ def get_latest_location(childid: str, user=Depends(get_current_user)):
     except Exception as e:
         print("❌ Error fetching location:", str(e))
         raise HTTPException(status_code=500, detail="Failed to fetch location")
+    
+@router.post("/location/set-tracking")
+async def set_tracking_flag(data: dict = Body(...), user=Depends(get_current_user)):
+    """
+    Sets only the tracking flag (istracking) for the given childid.
+    """
+    try:
+        child_id = data.get("childid")
+        istracking = data.get("istracking")
+
+        if child_id is None or istracking is None:
+            raise HTTPException(status_code=400, detail="Missing childid or istracking")
+
+        doc_ref = db.collection("locations").document(child_id)
+
+        doc_ref.set({
+            "istracking": istracking,
+            "timestamp": datetime.now(),
+        }, merge=True)
+
+        return {"status": "success", "message": f"Tracking set to {istracking}"}
+
+    except Exception as e:
+        print("❌ Error setting tracking:", str(e))
+        raise HTTPException(status_code=500, detail="Failed to set tracking flag")
+

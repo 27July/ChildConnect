@@ -26,6 +26,19 @@ import {
 import { ShieldUser, KeyRound } from "lucide-react-native";
 import PasswordChangeModal from "./PasswordChangeModal";
 
+// Valid coordinates check
+const isValidCoordinate = (
+  coord: { latitude?: number; longitude?: number } | null | undefined
+): coord is { latitude: number; longitude: number } => {
+  return (
+    coord != null &&
+    typeof coord.latitude === "number" &&
+    typeof coord.longitude === "number" &&
+    !isNaN(coord.latitude) &&
+    !isNaN(coord.longitude)
+  );
+};
+
 // Custom pin images
 const childPin = require("../../../assets/map_pins/child-pin.png");
 const parentPin = require("../../../assets/map_pins/parent-pin.png");
@@ -514,7 +527,7 @@ export default function ChildDetailScreen() {
                 });
 
                 // Notify backend to start tracking
-                await fetch(`${apiURL}/location/update`, {
+                await fetch(`${apiURL}/location/set-tracking`, {
                   method: "POST",
                   headers: {
                     Authorization: `Bearer ${token}`,
@@ -522,8 +535,6 @@ export default function ChildDetailScreen() {
                   },
                   body: JSON.stringify({
                     childid: childId,
-                    latitude: location?.latitude,
-                    longitude: location?.longitude,
                     istracking: true,
                   }),
                 });
@@ -584,107 +595,83 @@ export default function ChildDetailScreen() {
             style={{ height: 300 }}
             className="rounded-xl overflow-hidden bg-gray-300"
           >
-            {childBackendLocation && location ? (
+            {isValidCoordinate(location) &&
+            isValidCoordinate(childBackendLocation) ? (
               <MapView
                 ref={mapRef}
                 style={{ flex: 1 }}
                 initialRegion={
-                  schoolLocation
+                  isValidCoordinate(schoolLocation)
                     ? {
                         latitude: schoolLocation.latitude,
                         longitude: schoolLocation.longitude,
                         latitudeDelta: 0.01,
                         longitudeDelta: 0.01,
                       }
-                    : undefined
+                    : {
+                        latitude: childBackendLocation.latitude,
+                        longitude: childBackendLocation.longitude,
+                        latitudeDelta: 0.01,
+                        longitudeDelta: 0.01,
+                      }
                 }
               >
-                {/* Custom Child Pin */}
-                <Marker coordinate={childBackendLocation}>
-                  <View
-                    style={{
-                      backgroundColor: "white",
-                      padding: 6,
-                      borderRadius: 999,
-                      elevation: 5,
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.25,
-                      shadowRadius: 3.5,
+                {/* Child Marker */}
+                {isValidCoordinate(childBackendLocation) && (
+                  <Marker coordinate={childBackendLocation}>
+                    <View style={markerStyle}>
+                      <Image
+                        source={childPin}
+                        style={{ width: 40, height: 40 }}
+                        resizeMode="contain"
+                      />
+                    </View>
+                    <Callout>
+                      <Text>{child?.name || "Child"}</Text>
+                    </Callout>
+                  </Marker>
+                )}
+
+                {/* Parent (User) Marker */}
+                {isValidCoordinate(location) && (
+                  <Marker coordinate={location}>
+                    <View style={markerStyle}>
+                      <Image
+                        source={parentPin}
+                        style={{ width: 40, height: 40 }}
+                        resizeMode="contain"
+                      />
+                    </View>
+                    <Callout>
+                      <Text>You</Text>
+                    </Callout>
+                  </Marker>
+                )}
+
+                {/* School Marker */}
+                {isValidCoordinate(schoolLocation) && (
+                  <Marker
+                    coordinate={{
+                      latitude: schoolLocation.latitude,
+                      longitude: schoolLocation.longitude,
                     }}
                   >
-                    <Image
-                      source={childPin}
-                      style={{ width: 40, height: 40 }}
-                      resizeMode="contain"
-                    />
-                  </View>
-                  <Callout>
-                    <Text>{child?.name || "Child"}</Text>
-                  </Callout>
-                </Marker>
-
-                {/* Custom Parent Pin */}
-                <Marker coordinate={location}>
-                  <View
-                    style={{
-                      backgroundColor: "white",
-                      padding: 6,
-                      borderRadius: 999,
-                      elevation: 5,
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.25,
-                      shadowRadius: 3.5,
-                    }}
-                  >
-                    <Image
-                      source={parentPin}
-                      style={{ width: 40, height: 40 }}
-                      resizeMode="contain"
-                    />
-                  </View>
-                  <Callout>
-                    <Text>You</Text>
-                  </Callout>
-                </Marker>
-
-                {/* Custom School Pin */}
-                {schoolLocation?.latitude != null &&
-                  schoolLocation?.longitude != null && (
-                    <Marker
-                      coordinate={{
-                        latitude: schoolLocation.latitude,
-                        longitude: schoolLocation.longitude,
-                      }}
-                    >
-                      <View
-                        style={{
-                          backgroundColor: "white",
-                          padding: 6,
-                          borderRadius: 999,
-                          elevation: 5,
-                          shadowColor: "#000",
-                          shadowOffset: { width: 0, height: 2 },
-                          shadowOpacity: 0.25,
-                          shadowRadius: 3.5,
-                        }}
-                      >
-                        <Image
-                          source={schoolPin}
-                          style={{ width: 40, height: 40 }}
-                          resizeMode="contain"
-                        />
-                      </View>
-                      <Callout>
-                        <Text>School</Text>
-                      </Callout>
-                    </Marker>
-                  )}
+                    <View style={markerStyle}>
+                      <Image
+                        source={schoolPin}
+                        style={{ width: 40, height: 40 }}
+                        resizeMode="contain"
+                      />
+                    </View>
+                    <Callout>
+                      <Text>School</Text>
+                    </Callout>
+                  </Marker>
+                )}
               </MapView>
             ) : (
               <Text className="text-center text-red-500 mt-4">
-                Unable to fetch locations
+                Unable to fetch valid location data.
               </Text>
             )}
           </View>
@@ -727,3 +714,14 @@ export default function ChildDetailScreen() {
     </SafeAreaView>
   );
 }
+
+const markerStyle = {
+  backgroundColor: "white",
+  padding: 6,
+  borderRadius: 999,
+  elevation: 5,
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.25,
+  shadowRadius: 3.5,
+};
