@@ -129,7 +129,7 @@ export default function ChatList() {
               </Text>
               {item.childNames?.length > 0 && (
                 <Text className="text-sm text-gray-500 mt-0.5">
-                  Parent of {item.childNames.join(", ")}
+                 
                 </Text>
               )}
             </View>
