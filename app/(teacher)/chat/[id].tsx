@@ -50,7 +50,9 @@ export default function ChatScreen() {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
-    setMessages(data.sort((a, b) => a.timestamp._seconds - b.timestamp._seconds));
+    setMessages(
+      data.sort((a, b) => a.timestamp._seconds - b.timestamp._seconds)
+    );
     setLoading(false);
     setRefreshing(false);
   };
@@ -104,6 +106,7 @@ export default function ChatScreen() {
   };
 
   const pickImage = async () => {
+    console.log("image picker pressed");
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       alert("Permission to access gallery is required!");
@@ -111,7 +114,7 @@ export default function ChatScreen() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaType.Images,
+      mediaTypes: ["images"],
       quality: 0.7,
       base64: true,
     });
@@ -150,7 +153,9 @@ export default function ChatScreen() {
     const wasRead = item.isRead && item.receiver !== auth.currentUser?.uid;
 
     return (
-      <View className={`flex-row mb-3 ${isMe ? "justify-end" : "justify-start"}`}>
+      <View
+        className={`flex-row mb-3 ${isMe ? "justify-end" : "justify-start"}`}
+      >
         {!isMe && renderAvatar()}
         <View
           style={{
@@ -197,7 +202,11 @@ export default function ChatScreen() {
           data={messages}
           renderItem={renderMessage}
           keyExtractor={(item, index) => index.toString()}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 80 }}
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 20,
+            paddingBottom: 80,
+          }}
           onContentSizeChange={() =>
             flatListRef.current?.scrollToEnd({ animated: true })
           }
@@ -212,6 +221,22 @@ export default function ChatScreen() {
           refreshing={refreshing}
           onRefresh={handleRefresh}
         />
+        {imageBase64 && (
+          <View className="px-4 py-2 flex-row items-center">
+            <Image
+              source={{ uri: imageBase64 }}
+              style={{
+                width: 100,
+                height: 100,
+                borderRadius: 12,
+                marginRight: 8,
+              }}
+            />
+            <TouchableOpacity onPress={() => setImageBase64(null)}>
+              <Feather name="x-circle" size={24} color="#FF5A5F" />
+            </TouchableOpacity>
+          </View>
+        )}
 
         <View
           className="flex-row items-end border-t border-primary-100 bg-white"
