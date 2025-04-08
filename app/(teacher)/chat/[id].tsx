@@ -18,6 +18,13 @@ import * as ImagePicker from "expo-image-picker";
 import { Feather } from "@expo/vector-icons";
 import ProfilePic from "@/assets/images/profilepic.svg";
 
+const LANGUAGES = [
+  { code: "en", label: "English" },
+  { code: "zh", label: "Chinese" },
+  { code: "ms", label: "Malay" },
+  { code: "ta", label: "Tamil" },
+];
+
 export default function ChatScreen() {
   const { id: chatId } = useLocalSearchParams();
   const [messages, setMessages] = useState([]);
@@ -27,6 +34,7 @@ export default function ChatScreen() {
   const [sending, setSending] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [otherUserProfile, setOtherUserProfile] = useState(null);
+  const [translations, setTranslations] = useState({});
   const apiURL = `http://${ip}:8000`;
   const flatListRef = useRef();
   const pollingRef = useRef(null);
@@ -37,15 +45,12 @@ export default function ChatScreen() {
     markMessagesAsRead();
     fetchOtherUserProfile();
 
-    // Poll every 5 seconds
     pollingRef.current = setInterval(() => {
       fetchMessages();
     }, 5000);
 
     return () => {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-      }
+      if (pollingRef.current) clearInterval(pollingRef.current);
     };
   }, [chatId]);
 
@@ -55,9 +60,7 @@ export default function ChatScreen() {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
-    const sorted = data.sort(
-      (a, b) => a.timestamp._seconds - b.timestamp._seconds
-    );
+    const sorted = data.sort((a, b) => a.timestamp._seconds - b.timestamp._seconds);
     setMessages(sorted);
     setLoading(false);
     setRefreshing(false);
@@ -69,9 +72,12 @@ export default function ChatScreen() {
     }
   };
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchMessages();
+  const markMessagesAsRead = async () => {
+    const token = await auth.currentUser.getIdToken();
+    await fetch(`${apiURL}/markread/${chatId}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
   };
 
   const fetchOtherUserProfile = async () => {
@@ -83,12 +89,9 @@ export default function ChatScreen() {
     setOtherUserProfile(data);
   };
 
-  const markMessagesAsRead = async () => {
-    const token = await auth.currentUser.getIdToken();
-    await fetch(`${apiURL}/markread/${chatId}`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchMessages();
   };
 
   const sendMessage = async () => {
@@ -118,7 +121,6 @@ export default function ChatScreen() {
   };
 
   const pickImage = async () => {
-    console.log("image picker pressed");
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       alert("Permission to access gallery is required!");
@@ -135,6 +137,50 @@ export default function ChatScreen() {
       const base64 = result.assets[0].base64;
       setImageBase64(`data:image/jpeg;base64,${base64}`);
     }
+  };
+
+  const translateText = async (messageId, original, nextLang) => {
+    if (nextLang === "en") {
+      setTranslations((prev) => ({
+        ...prev,
+        [messageId]: {
+          text: original,
+          lang: "en",
+        },
+      }));
+      return;
+    }
+
+    try {
+      const res = await fetch("https://translate-text-565810748414.asia-southeast1.run.app", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: original,
+          source: "en",
+          target: nextLang,
+        }),
+      });
+      const data = await res.json();
+      setTranslations((prev) => ({
+        ...prev,
+        [messageId]: {
+          text: data.translatedText || "⚠️ Failed",
+          lang: nextLang,
+        },
+      }));
+    } catch (err) {
+      console.error("Translation failed", err);
+    }
+  };
+
+  const handleCycleTranslation = (item) => {
+    const current = translations[item.id]?.lang || "en";
+    const currentIndex = LANGUAGES.findIndex((l) => l.code === current);
+    const nextIndex = (currentIndex + 1) % LANGUAGES.length;
+    const nextLang = LANGUAGES[nextIndex].code;
+
+    translateText(item.id, item.message, nextLang);
   };
 
   const renderMessage = ({ item }) => {
@@ -162,9 +208,11 @@ export default function ChatScreen() {
     };
 
     const wasRead = item.isRead && item.receiver !== auth.currentUser?.uid;
+    const displayText = translations[item.id]?.text || item.message;
 
     return (
-      <View
+      <TouchableOpacity
+        onPress={() => handleCycleTranslation(item)}
         className={`flex-row mb-3 ${isMe ? "justify-end" : "justify-start"}`}
       >
         {!isMe && renderAvatar()}
@@ -187,7 +235,7 @@ export default function ChatScreen() {
           )}
           {item.message ? (
             <Text className="text-[15px] text-gray-800 leading-snug">
-              {item.message}
+              {displayText}
             </Text>
           ) : null}
           <Text className="text-[11px] text-gray-400 mt-1">{timestamp}</Text>
@@ -197,7 +245,7 @@ export default function ChatScreen() {
             {wasRead ? "✓✓" : "✓"}
           </Text>
         )}
-      </View>
+      </TouchableOpacity>
     );
   };
 

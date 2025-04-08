@@ -14,6 +14,13 @@ from fastapi import FastAPI, HTTPException, Depends, Body
 from datetime import datetime
 from firebase_admin import credentials, storage, firestore
 from pydantic import BaseModel
+from google.cloud import speech
+from speech_to_text import router as speech_router
+
+
+
+client = speech.SpeechClient.from_service_account_file("speech-to-text-key.json")
+
 
 
 # import the routers
@@ -22,6 +29,7 @@ from homework_route import router as homework_router
 from schools_route import router as schools_router
 from schoolofchild_route import router as school_of_child_router
 from child_mode_auth_route import router as childmode_router
+from translation_routes import router as translation_router
 
 
 cloudinary.config(
@@ -44,7 +52,7 @@ if not firebase_admin._apps:
 
 db = firestore.client()
 
-preload_school_data()
+#preload_school_data()
 
 #External Routers
 app = FastAPI()
@@ -53,7 +61,8 @@ app.include_router(schools_router)
 app.include_router(homework_router)
 app.include_router(school_of_child_router)
 app.include_router(childmode_router)
-
+app.include_router(translation_router)
+app.include_router(speech_router)
 
 
 # ✅ Enable CORS for Expo & Web Access

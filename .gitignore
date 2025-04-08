@@ -49,3 +49,4 @@ venv
 utils/server_ip.json
 
 .cloudenv
+speech-to-text-key.json
