@@ -29,20 +29,25 @@ export default function ChatScreen() {
   const [otherUserProfile, setOtherUserProfile] = useState(null);
   const apiURL = `http://${ip}:8000`;
   const flatListRef = useRef();
+  const pollingRef = useRef(null);
+  const lastMessageIdRef = useRef(null);
 
   useEffect(() => {
     fetchMessages();
     markMessagesAsRead();
     fetchOtherUserProfile();
-  }, [chatId]);
 
-  useEffect(() => {
-    if (messages.length > 0) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }
-  }, [messages]);
+    // Poll every 5 seconds
+    pollingRef.current = setInterval(() => {
+      fetchMessages();
+    }, 5000);
+
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
+    };
+  }, [chatId]);
 
   const fetchMessages = async () => {
     const token = await auth.currentUser.getIdToken();
@@ -50,11 +55,18 @@ export default function ChatScreen() {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
-    setMessages(
-      data.sort((a, b) => a.timestamp._seconds - b.timestamp._seconds)
+    const sorted = data.sort(
+      (a, b) => a.timestamp._seconds - b.timestamp._seconds
     );
+    setMessages(sorted);
     setLoading(false);
     setRefreshing(false);
+
+    const lastId = sorted[sorted.length - 1]?.id || "";
+    if (lastMessageIdRef.current !== lastId) {
+      flatListRef.current?.scrollToEnd({ animated: true });
+      lastMessageIdRef.current = lastId;
+    }
   };
 
   const handleRefresh = async () => {
@@ -125,7 +137,6 @@ export default function ChatScreen() {
     }
   };
 
-  // ✅ This must be defined BEFORE return
   const renderMessage = ({ item }) => {
     const isMe = item.sender === auth.currentUser?.uid;
     const timestamp = item.timestamp?._seconds
@@ -221,6 +232,7 @@ export default function ChatScreen() {
           refreshing={refreshing}
           onRefresh={handleRefresh}
         />
+
         {imageBase64 && (
           <View className="px-4 py-2 flex-row items-center">
             <Image
