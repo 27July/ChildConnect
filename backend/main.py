@@ -16,7 +16,7 @@ from firebase_admin import credentials, storage, firestore
 from pydantic import BaseModel
 from google.cloud import speech
 from speech_to_text import router as speech_router
-
+from fastapi.staticfiles import StaticFiles
 
 
 client = speech.SpeechClient.from_service_account_file("speech-to-text-key.json")
@@ -30,6 +30,7 @@ from schools_route import router as schools_router
 from schoolofchild_route import router as school_of_child_router
 from child_mode_auth_route import router as childmode_router
 from translation_routes import router as translation_router
+from speak_text import router as speak_text_router
 
 
 cloudinary.config(
@@ -63,6 +64,8 @@ app.include_router(school_of_child_router)
 app.include_router(childmode_router)
 app.include_router(translation_router)
 app.include_router(speech_router)
+app.include_router(speak_text_router)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 # ✅ Enable CORS for Expo & Web Access
