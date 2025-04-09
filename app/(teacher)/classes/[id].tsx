@@ -213,7 +213,23 @@ export default function ClassDetailScreen() {
         >
           <Text className="text-white font-semibold">Add Announcement</Text>
         </TouchableOpacity>
+
+        
       </View>
+      <View className="mb-4 px-2">
+        <TouchableOpacity
+          className="w-full bg-primary-400 px-4 py-3 rounded-xl shadow-sm items-center"
+          onPress={() =>
+            router.push({
+              pathname: "/(teacher)/profile/gradeList",
+              params: { id },
+            })
+          }
+        >
+          <Text className="text-white font-semibold">Grades</Text>
+        </TouchableOpacity>
+      </View>
+
 
       {/* 🔍 Search */}
       <TextInput

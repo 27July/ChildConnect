@@ -994,3 +994,43 @@ async def start_chat_with(other_user_id: str, user=Depends(get_current_user)):
     })
 
     return {"id": new_chat_ref.id}
+
+@app.get("/grades/by-class/{classid}")
+async def get_tests_by_class(classid: str):
+    try:
+        grades_ref = db.collection("grades")
+        query = grades_ref.where("classid", "==", classid)
+        results = query.stream()
+
+        test_list = []
+        for doc in results:
+            data = doc.to_dict()
+            test_list.append({
+                "testname": data.get("testname", ""),
+                "class": data.get("class", ""),
+                "classid": data.get("classid", ""),
+                "docid": doc.id
+            })
+
+        return test_list
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/grades/add-test")
+def add_test_score(data: dict, user=Depends(get_current_user)):
+    db.collection("grades").document().set({
+        "testname": data["testname"],
+        "classid": data["classid"],
+        "class": data["class"],
+        "childrenid": data["childrenid"],
+        "childrenname": data["childrenname"],
+        "childrenscore": data["childrenscore"],
+    })
+    return {"success": True}
+
+@app.get("/grades/{id}")
+def get_test_by_id(id: str, user=Depends(get_current_user)):
+    doc = db.collection("grades").document(id).get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Test not found")
+    return doc.to_dict()
