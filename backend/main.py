@@ -1034,3 +1034,25 @@ def get_test_by_id(id: str, user=Depends(get_current_user)):
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Test not found")
     return doc.to_dict()
+
+@app.get("/grades/by-child/{childid}")
+async def get_tests_for_child(childid: str, token=Depends(get_current_user)):
+    grades_ref = db.collection("grades")
+    all_docs = grades_ref.stream()
+
+    matching_tests = []
+    for doc in all_docs:
+        data = doc.to_dict()
+        if childid in data.get("childrenid", []):
+            idx = data["childrenid"].index(childid)
+            score = data["childrenscore"][idx]
+            matching_tests.append({
+                "testname": data.get("testname", "Unnamed Test"),
+                "score": score,
+                "total": 100,
+                "docid": doc.id,
+                "class": data.get("class"),
+                "all_scores": data.get("childrenscore", [])
+            })
+
+    return matching_tests

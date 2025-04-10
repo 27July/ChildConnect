@@ -495,6 +495,10 @@ export default function ChildDetailScreen() {
             label: "Homework List",
             path: "../profile/childhomework",
           },
+          {
+            label: "Grades",
+            path: "../profile/testResult",
+          }
         ].map(({ label, path }, index) => (
           <TouchableOpacity
             key={index}
