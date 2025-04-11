@@ -146,11 +146,11 @@ ChildConnect/
 
 ## 👥 Contributors
 
-- Tan Yi Jun [https://github.com/whyzaac]
-- Wee Zi Hao [https://github.com/27July]
-- Sivaguruanathan Keerthivasan [https://github.com/keerthivasan2002]
-- Edwin Tan Yu Qi []
-- Kumar Advaith []
+- [Tan Yi Jun](https://github.com/whyzaac)
+- [Wee Zi Hao](https://github.com/27July)
+- [Sivaguruanathan Keerthivasan](https://github.com/keerthivasan2002)
+- [Edwin Tan Yu Qi ]
+- [Kumar Advaith ]
 
 
 
