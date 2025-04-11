@@ -1,0 +1,30 @@
+# FastAPI Backend Framework
+fastapi==0.115.12
+uvicorn==0.34.0
+starlette==0.46.1
+python-multipart==0.0.20
+pydantic==2.10.6
+pydantic_core==2.27.2
+
+# Firebase Integration
+firebase-admin==6.7.0
+google-cloud-firestore==2.20.1
+google-cloud-storage==3.1.0
+google-auth==2.38.0
+PyJWT==2.10.1
+
+# Google Cloud Services
+google-cloud-texttospeech==2.25.1
+google-cloud-speech==2.31.1
+
+# HTTP/Networking
+requests==2.32.3
+httpx==0.28.1
+urllib3==2.3.0
+
+# Media Processing
+cloudinary==1.43.0
+
+# Utilities
+typing_extensions==4.13.0
+anyio==4.9.0
