@@ -820,7 +820,7 @@ class HomeworkRequest(BaseModel):
 @app.post("/addhomework")
 def add_homework(data: dict, user=Depends(get_current_user)):
     # Parse ISO date to datetime
-    duedate_obj = datetime.fromisoformat(data["duedate"])
+    duedate_obj = datetime.fromisoformat(data["duedate"].replace("Z", "+00:00"))
     
     homework_ref = db.collection("homework").document()
     homework_ref.set({
