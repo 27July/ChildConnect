@@ -7,6 +7,7 @@
 
 > A secure mobile app connecting parents, teachers, and children in an educational ecosystem.  
 > Built with **React Native**, **FastAPI**, and **Firebase**.
+> Built for **NTU SC2006 Software Engineer** module
 
 ---
 
@@ -149,9 +150,8 @@ ChildConnect/
 - [Tan Yi Jun](https://github.com/whyzaac)
 - [Wee Zi Hao](https://github.com/27July)
 - [Sivaguruanathan Keerthivasan](https://github.com/keerthivasan2002)
-- [Edwin Tan Yu Qi ]
-- [Kumar Advaith ]
-
+- Edwin Tan Yu Qi
+- Kumar Advaith
 
 
 ---
