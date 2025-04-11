@@ -7,7 +7,7 @@
 
 > A secure mobile app connecting parents, teachers, and children in an educational ecosystem.  
 > Built with **React Native**, **FastAPI**, and **Firebase**.
-> Built for **NTU SC2006 Software Engineer** module
+> Built for **NTU SC2006 Software Engineering** module.
 
 ---
 
