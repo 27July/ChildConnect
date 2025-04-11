@@ -1,50 +1,164 @@
-# Welcome to your Expo app 👋
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+# ChildConnect
 
-## Get started
+![Platform](https://img.shields.io/badge/platform-iOS%20%7C%20Android-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Build](https://img.shields.io/badge/build-passing-brightgreen)
 
-1. Install dependencies
+> A secure mobile app connecting parents, teachers, and children in an educational ecosystem.  
+> Built with **React Native**, **FastAPI**, and **Firebase**.
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+## 🧠 Overview
 
-   ```bash
-    npx expo start
-   ```
+**ChildConnect** is a feature-rich mobile application designed to streamline communication and collaboration between parents, teachers, and children. It empowers safe, real-time monitoring and supports educational and administrative functions within schools or childcare settings.
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## ⚙️ Architecture
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Frontend
+- **React Native with Expo** – Cross-platform mobile development
+- **NativeWind** – Tailwind CSS for styling
+- **Expo Router** – File-based routing
+- **Firebase Auth** – Secure login and session management
 
-## Get a fresh project
+### Backend
+- **FastAPI** – High-performance Python backend
+- **Firebase Admin SDK** – Admin access to authentication, database
+- **Firestore** – Realtime NoSQL database
+- **Google Cloud Services** – Speech recognition, TTS, translation
+- **Cloudinary** – Media storage (images, documents)
 
-When you're ready, run:
+---
+
+## ✨ Features
+
+### 👨‍👩‍👧 For Parents
+- 🔍 Real-time child tracking
+- 🧒 Child Mode with PIN-secure access
+- 📚 Homework, attendance & academic monitoring
+- 🗣️ Direct multilingual messaging with teachers
+- 📁 Medical & academic documentation access
+
+### 👩‍🏫 For Teachers
+- 🏫 Class & student management
+- 💬 Messaging with parents
+- 📈 Grade recording & homework posting
+- 📋 Notes and performance documentation
+
+### 🧒 For Children
+- 📖 View homework tasks
+- 📍 Passive location tracking when in Child Mode
+
+---
+
+## 🚀 Getting Started
+
+### 🔧 Prerequisites
+
+- Node.js (v18+)
+- Python 3.10+
+- Firebase account
+- Google Cloud Platform account
+
+### 📱 Frontend Setup
 
 ```bash
-npm run reset-project
+git clone https://github.com/yourusername/ChildConnect.git
+cd ChildConnect
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 🖥️ Backend Setup
 
-## Learn more
+```bash
+cd backend
+python -m venv venv
 
-To learn more about developing your project with Expo, look at the following resources:
+# Activate the virtual environment
+# Windows
+venv\Scripts\activate
+# macOS/Linux
+source venv/bin/activate
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+# Install dependencies
+pip install -r requirements.txt
 
-## Join the community
+# Create .env based on .env.example
+# Add Firebase service account credentials and config
 
-Join our community of developers creating universal apps.
+# Start the backend server
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+---
+
+## 🔌 API Overview
+
+ChildConnect exposes FastAPI endpoints for:
+
+- ✅ User registration & login
+- 📍 Child location tracking
+- 📝 Homework and academic records
+- 🗣️ Speech-to-text & text-to-speech
+- 🌐 Translation (Google Cloud Translation API)
+
+---
+
+## 🔐 Firebase Configuration
+
+To set up Firebase:
+
+1. Create a Firebase project
+2. Enable Email/Password authentication
+3. Set up Firestore & Storage
+4. Generate service account key for server usage
+5. Add config to `.env`
+
+---
+
+## 📁 Project Structure
+
+```
+ChildConnect/
+│
+├── app/               # Screens organized by role (Parent, Teacher, Child)
+├── components/        # Reusable UI components
+├── backend/           # FastAPI backend
+├── assets/            # Static images, icons, logos
+└── utils/             # Utility functions & configuration
+```
+
+---
+
+## 📝 Development Notes
+
+- Uses **Expo Location API** for real-time tracking
+- Implements **PIN-based Child Mode exit**
+- Chat is **auto-translated** based on selected language
+- Voice features use **Google Speech & Text-to-Speech APIs**
+- Role-based navigation is handled via **Expo Router**
+
+---
+
+## 👥 Contributors
+
+- Tan Yi Jun [https://github.com/whyzaac]
+- Wee Zi Hao [https://github.com/27July]
+- Sivaguruanathan Keerthivasan [https://github.com/keerthivasan2002]
+- Edwin Tan Yu Qi []
+- Kumar Advaith []
+
+
+
+---
+
+## 📄 License
+
+Licensed under the [MIT License](LICENSE).
+
+---
+
