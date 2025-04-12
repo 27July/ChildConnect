@@ -5,6 +5,8 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/firebaseConfig";
 import OnPressRouteButton from "@/components/onpressroutebutton";
 import { ip } from "@/utils/server_ip.json";
+import { registerUser } from "@/controllers/registerController";
+
 
 export default function RegisterTeacher() {
   const router = useRouter();
@@ -24,25 +26,20 @@ export default function RegisterTeacher() {
       Alert.alert("Missing Fields", "Please fill in all fields.");
       return;
     }
-
+  
     try {
-      // ✅ 1. Register with Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      const token = await user.getIdToken();
-
-      // ✅ 2. Send profile data to backend
-      const response = await fetch(`${apiURL}/registerteacher`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name,
-          phone,
-        }),
-      });
+      await registerUser(email, password, name, phone, "teacher");
+      Alert.alert("Success", "Account created!");
+      router.push("/login");
+    } catch (error: any) {
+      console.error("Registration Error:", error.message);
+      if (error.code === "auth/email-already-in-use") {
+        Alert.alert("This email is already registered.");
+      } else {
+        Alert.alert("Registration failed", error.message);
+      }
+    }
+  };
 
       if (!response.ok) {
         throw new Error("Failed to save user profile.");

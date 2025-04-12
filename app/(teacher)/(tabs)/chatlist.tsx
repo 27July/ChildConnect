@@ -12,6 +12,8 @@ import { useRouter, useFocusEffect } from "expo-router";
 import { auth } from "@/firebaseConfig";
 import { ip } from "@/utils/server_ip.json";
 import ProfilePic from "@/assets/images/profilepic.svg";
+import { createProfileImage } from "@/factories/profileImageFactory";
+import { formatTimestamp } from "@/utils/strategies/formatTimestamp";
 
 export default function ChatList() {
   const [loading, setLoading] = useState(true);
@@ -99,23 +101,9 @@ export default function ChatList() {
     }
   };
 
-  const formatTimestamp = (ts) => {
-    if (!ts) return "-";
-    if (typeof ts === "string") {
-      return new Date(ts).toLocaleString();
-    }
-    if (ts._seconds) {
-      return new Date(ts._seconds * 1000).toLocaleString();
-    }
-    return "-";
-  };
-
-  const renderProfileImage = (uri) => {
-    if (!uri || uri.trim() === "") {
-      return <ProfilePic width={40} height={40} />;
-    }
-    return <Image source={{ uri }} className="w-10 h-10 rounded-full" />;
-  };
+  {
+    createProfileImage(item.otherUserPic);
+  }
 
   const renderChatItem = ({ item }) => {
     return (

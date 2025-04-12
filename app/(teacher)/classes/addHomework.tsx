@@ -12,6 +12,7 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { auth } from "@/firebaseConfig";
 import { ip } from "@/utils/server_ip.json";
+import { submitHomework } from "@/controllers/homeworkController";
 
 const subjects = ["Math", "Science", "English", "Mother Tongue"];
 
@@ -35,28 +36,7 @@ export default function AddHomeworkScreen() {
 
     try {
       setLoading(true);
-      const token = await auth.currentUser.getIdToken();
-      const teacherid = auth.currentUser.uid;
-
-      const payload = {
-        classid,
-        name,
-        content,
-        duedate,
-        subject,
-        teacherid,
-      };
-
-      const res = await fetch(`${apiURL}/addhomework`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error("Failed to assign homework");
+      await submitHomework({ classid, name, content, subject, duedate });
       Alert.alert("Success", "Homework assigned.");
       router.back();
     } catch (err) {

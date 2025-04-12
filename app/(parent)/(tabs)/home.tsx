@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { auth } from "@/firebaseConfig";
 import { ip } from "@/utils/server_ip.json";
 import { useRouter, useFocusEffect } from "expo-router";
-import ProfilePic from "../../../assets/images/profilepic.svg";
+import { fetchHomeData } from "@/controllers/homeController";
 
 // 🔹 Types
 type Announcement = {
@@ -42,32 +42,18 @@ export default function HomeScreen() {
   const router = useRouter();
 
   const fetchData = async () => {
-    const user = auth.currentUser;
-    if (!user) {
-      Alert.alert("Error", "No user logged in.");
-      return;
-    }
-  
     try {
       setRefreshing(true);
-      const token = await user.getIdToken();
-  
-      // ✅ Profile picture
-      const profileRes = await fetch(`${apiURL}/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const profileData = await profileRes.json();
-      setProfilePic(profileData.profilepic || null); // ✅ only this sets profilePic
-  
-      // ✅ Announcements
-      const annRes = await fetch(`${apiURL}/homeparentinfo`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const annData = await annRes.json();
-      const announcements: Announcement[] = (annData.announcements || []).map((ann) => ({
-        ...ann,
-        type: "announcement",
-      }));
+      const { profilePic, unreadChats, announcements } = await fetchHomeData("parent");
+      setProfilePic(profilePic);
+      setCombinedItems([...announcements, ...unreadChats]);
+    } catch (err: any) {
+      console.error("❌ Home fetch error:", err.message);
+      Alert.alert("Error", "Could not load home screen data.");
+    } finally {
+      setRefreshing(false);
+    }
+  };
   
       // ✅ Unread Chats
       const chatRes = await fetch(`${apiURL}/findchats`, {

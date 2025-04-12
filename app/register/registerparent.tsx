@@ -5,6 +5,7 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/firebaseConfig";
 import OnPressRouteButton from "@/components/onpressroutebutton";
 import { ip } from "@/utils/server_ip.json";
+import { registerUser } from "@/controllers/registerController";
 
 export default function RegisterParent() {
   const router = useRouter();
@@ -26,28 +27,7 @@ export default function RegisterParent() {
     }
 
     try {
-      // ✅ 1. Register with Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      const token = await user.getIdToken();
-
-      // ✅ 2. Send profile data to backend
-      const response = await fetch(`${apiURL}/registerparent`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name,
-          phone,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to save user profile.");
-      }
-
+      await registerUser(email, password, name, phone, "parent");
       Alert.alert("Success", "Account created!");
       router.push("/login");
     } catch (error: any) {

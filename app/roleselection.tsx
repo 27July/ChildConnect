@@ -1,11 +1,11 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
-import RouteButton from "@/components/routebutton"; // Updated button component
-import OnboardingSVG from "@/assets/images/roleselection.svg";
+import { StyleSheet, Text, View } from "react-native";
+import React from "react";
+import OnboardingSVG from "../assets/images/onboardingimg.svg";
+import { generateRoleButtons } from "@/factories/roleViewFactory";
 
-const roleselection = () => {
+const RoleSelection = () => {
   return (
- <View className="flex-1 bg-primary-50 px-5">
+    <View className="flex-1 bg-primary-50 px-5">
       {/* SVG + Text section */}
       <View className="flex-1 items-center justify-end pb-20">
         <OnboardingSVG width={250} height={250} className="mt-20 mb-10" />
@@ -17,16 +17,12 @@ const roleselection = () => {
         </Text>
       </View>
 
-      {/* Reusable buttons */}
-      <View className="flex pb-2 px-6 pt-0">
-        <RouteButton title="I'm a Parent!" to="./register/registerparent" />
-      </View>
-      <View className="flex pb-20 px-6 pt-2">
-        <RouteButton title="I'm a Teacher!" to="./register/registerteacher" />
+      {/* Buttons generated via Factory */}
+      <View className="flex pb-20 px-6 pt-0 space-y-4">
+        {generateRoleButtons()}
       </View>
     </View>
-  )
-}
+  );
+};
 
-export default roleselection
-
+export default RoleSelection;

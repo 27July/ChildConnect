@@ -18,6 +18,7 @@ import { auth } from "../firebaseConfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { ip } from "../utils/server_ip.json";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { loginUser } from "@/controllers/authController";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -31,28 +32,13 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const user = userCredential.user;
-      const token = await user.getIdToken();
+      const { name, role } = await loginUser(email, password);
+      Alert.alert("Login Successful", name);
 
-      const response = await fetch(`${apiURL}/profile`, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) throw new Error("Invalid user");
-
-      const data = await response.json();
-      Alert.alert("Login Successful", `${data.name}`);
-
-      if (data.role === "parent") {
-        router.replace("./(parent)/(tabs)/home");
-      } else if (data.role === "teacher") {
-        router.replace("./(teacher)/(tabs)/home");
+      if (role === "parent") {
+        router.replace("/(parent)/(tabs)/home");
+      } else if (role === "teacher") {
+        router.replace("/(teacher)/(tabs)/home");
       }
     } catch (err: any) {
       Alert.alert("Login Failed", err.message || "Please try again.");

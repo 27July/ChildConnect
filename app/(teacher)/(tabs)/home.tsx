@@ -13,6 +13,8 @@ import { auth } from "@/firebaseConfig";
 import { ip } from "@/utils/server_ip.json";
 import { useRouter, useFocusEffect } from "expo-router";
 import ProfilePic from "../../../assets/images/profilepic.svg";
+import { useHomeObserver } from "@/observers/chatObserver";
+import { fetchHomeData } from "@/controllers/homeController";
 
 type Chat = {
   id: string;
@@ -29,36 +31,13 @@ export default function TeacherHomeScreen() {
   const router = useRouter();
 
   const fetchData = async () => {
-    const user = auth.currentUser;
-    if (!user) {
-      Alert.alert("Error", "No user logged in.");
-      return;
-    }
-
     try {
       setRefreshing(true);
-      const token = await user.getIdToken();
-
-      // 🔹 Profile picture
-      const profileRes = await fetch(`${apiURL}/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const profileData = await profileRes.json();
-      setProfilePic(profileData.profilepic || null);
-
-      // 🔹 Unread Chats only
-      const chatRes = await fetch(`${apiURL}/findchats`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const chatData = await chatRes.json();
-      const chats: Chat[] = chatData
-        .filter((chat: Chat) => !chat.isRead)
-        .map((chat) => ({
-          ...chat,
-          type: "chat",
-        }));
-
-      setUnreadChats(chats);
+      const { profilePic, unreadChats, announcements } = await fetchHomeData(
+        "teacher"
+      );
+      setProfilePic(profilePic);
+      setUnreadChats(unreadChats);
     } catch (err: any) {
       console.error("❌ Home fetch error:", err.message);
       Alert.alert("Error", "Could not load home screen data.");
@@ -66,12 +45,6 @@ export default function TeacherHomeScreen() {
       setRefreshing(false);
     }
   };
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchData();
-    }, [])
-  );
 
   return (
     <View className="flex-1 bg-primary-50">
@@ -109,7 +82,10 @@ export default function TeacherHomeScreen() {
               <TouchableOpacity
                 className="bg-white rounded-xl p-4 mb-3 shadow-sm shadow-slate-400 border border-primary-100"
                 onPress={() =>
-                  router.push({ pathname: "/chat/[id]", params: { id: item.id } })
+                  router.push({
+                    pathname: "/chat/[id]",
+                    params: { id: item.id },
+                  })
                 }
               >
                 <Text className="text-base font-semibold text-primary-400">

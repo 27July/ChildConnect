@@ -1,3 +1,5 @@
+// (teacher)/classes/[id].tsx (View)
+
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -10,9 +12,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { auth } from "@/firebaseConfig";
-import { ip } from "@/utils/server_ip.json";
 import ProfilePic from "@/assets/images/profilepic.svg";
+import {
+  loadChildrenAndAttendance,
+  toggleChildAttendance,
+} from "@/controllers/classController";
 
 export default function ClassDetailScreen() {
   const { id, name } = useLocalSearchParams();
@@ -20,82 +24,33 @@ export default function ClassDetailScreen() {
   const [attendanceMap, setAttendanceMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const apiURL = `http://${ip}:8000`;
   const router = useRouter();
 
   useEffect(() => {
-    fetchChildren();
+    async function fetchData() {
+      setLoading(true);
+      try {
+        const { children, attendanceMap } = await loadChildrenAndAttendance(id);
+        setChildren(children);
+        setAttendanceMap(attendanceMap);
+      } catch (err) {
+        console.error("Error loading class data:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
   }, [id]);
 
-  const fetchChildren = async () => {
-    const token = await auth.currentUser.getIdToken();
-    const res = await fetch(`${apiURL}/class/${id}/children`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-    setChildren(data);
-    fetchAttendance(data.map((c) => c.id));
-  };
-
-  const fetchAttendance = async (childIds) => {
-    const today = new Date();
-    const docId = today.toLocaleDateString("en-GB").split("/").join(""); // e.g. 01042025
-    const token = await auth.currentUser.getIdToken();
-
-    try {
-      const res = await fetch(`${apiURL}/attendance-for-date/${docId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) {
-        setAttendanceMap({});
-        setLoading(false);
-        return;
-      }
-
-      const data = await res.json();
-      const presentIds = new Set(data.map((d) => d.childid));
-      const map = {};
-      childIds.forEach((id) => {
-        map[id] = presentIds.has(id);
-      });
-
-      setAttendanceMap(map);
-    } catch (err) {
-      console.error("Error fetching attendance:", err);
-      setAttendanceMap({});
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleToggleAttendance = async (childid) => {
-    const today = new Date();
-    const docId = today.toLocaleDateString("en-GB").split("/").join(""); // DDMMYYYY
-    const token = await auth.currentUser.getIdToken();
-
     try {
-      const res = await fetch(`${apiURL}/attendance/toggle`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          childid,
-          date: docId,
-        }),
-      });
-
-      if (!res.ok) throw new Error("Toggle failed");
-
-      const result = await res.json();
+      const isNowPresent = await toggleChildAttendance(childid);
       setAttendanceMap((prev) => ({
         ...prev,
-        [childid]: result.status === "present",
+        [childid]: isNowPresent,
       }));
     } catch (err) {
-      console.error("Failed to toggle attendance:", err);
+      console.error("Toggle failed:", err);
     }
   };
 
@@ -104,8 +59,7 @@ export default function ClassDetailScreen() {
   );
 
   const renderChild = ({ item }) => {
-    const isPresent =
-      attendanceMap.hasOwnProperty(item.id) ? attendanceMap[item.id] : false;
+    const isPresent = attendanceMap[item.id] ?? false;
 
     return (
       <TouchableOpacity
@@ -184,7 +138,9 @@ export default function ClassDetailScreen() {
             })
           }
         >
-          <Text className="text-primary-400 font-semibold">Announcement List</Text>
+          <Text className="text-primary-400 font-semibold">
+            Announcement List
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -213,9 +169,8 @@ export default function ClassDetailScreen() {
         >
           <Text className="text-white font-semibold">Add Announcement</Text>
         </TouchableOpacity>
-
-        
       </View>
+
       <View className="mb-4 px-2">
         <TouchableOpacity
           className="w-full bg-primary-400 px-4 py-3 rounded-xl shadow-sm items-center"
@@ -229,7 +184,6 @@ export default function ClassDetailScreen() {
           <Text className="text-white font-semibold">Grades</Text>
         </TouchableOpacity>
       </View>
-
 
       {/* 🔍 Search */}
       <TextInput

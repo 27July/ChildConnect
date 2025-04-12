@@ -1,3 +1,5 @@
+#child_mode_auth_route.py
+
 from fastapi import APIRouter, Depends, HTTPException, Body
 from firebase_admin import firestore
 from services.firebase_auth import get_current_user

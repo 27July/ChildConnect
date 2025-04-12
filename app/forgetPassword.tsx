@@ -16,23 +16,16 @@ import OnPressRouteButton from "@/components/onpressroutebutton";
 import SmallRouteButton from "@/components/smallroutebutton";
 import { auth } from "@/firebaseConfig";
 import { sendPasswordResetEmail } from "firebase/auth";
+import { resetPassword } from "@/controllers/passwordResetController";
 
 export default function ForgetScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
 
   const handleResetPassword = async () => {
-    if (!email) {
-      Alert.alert("Input Required", "Please enter your email.");
-      return;
-    }
-
     try {
-      await sendPasswordResetEmail(auth, email);
-      Alert.alert(
-        "Password Reset Email Sent",
-        "Check your inbox for a reset link."
-      );
+      await resetPassword(email); // ✅ uses controller logic
+      Alert.alert("Password Reset Email Sent", "Check your inbox.");
       router.back();
     } catch (err: any) {
       Alert.alert("Reset Failed", err.message || "Try again later.");
@@ -66,11 +59,16 @@ export default function ForgetScreen() {
             />
 
             <View className="mb-4">
-              <OnPressRouteButton title="Send Reset Email" onPress={handleResetPassword} />
+              <OnPressRouteButton
+                title="Send Reset Email"
+                onPress={handleResetPassword}
+              />
             </View>
 
             <View className="flex-row justify-center mt-4">
-              <Text className="text-gray-500 mr-1">Remember your password?</Text>
+              <Text className="text-gray-500 mr-1">
+                Remember your password?
+              </Text>
               <SmallRouteButton title="Login" to="/login" />
             </View>
           </View>
