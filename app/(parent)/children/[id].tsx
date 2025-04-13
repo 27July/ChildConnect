@@ -498,7 +498,7 @@ export default function ChildDetailScreen() {
           {
             label: "Grades",
             path: "../profile/testResult",
-          },
+          }
         ].map(({ label, path }, index) => (
           <TouchableOpacity
             key={index}
@@ -585,13 +585,13 @@ export default function ChildDetailScreen() {
           </Text>
         </TouchableOpacity>
 
-        {/* <View className="flex-row items-center justify-center mb-3">
+        <View className="flex-row items-center justify-center mb-3">
           {lastUpdated && (
             <Text className="text-center text-sm text-gray-500 mt-1">
               Last updated: {lastUpdated}
             </Text>
           )}
-        </View> */}
+        </View>
 
         {/* Map with interactive markers */}
         <TouchableOpacity activeOpacity={0.9}>

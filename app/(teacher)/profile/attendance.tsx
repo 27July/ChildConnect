@@ -80,7 +80,7 @@ export default function AttendanceScreen() {
   return (
     <SafeAreaView className="flex-1 bg-primary-50">
       <ScrollView contentContainerStyle={{ padding: 20 }}>
-        {/* 🔹 Child Header */}
+        {/* Child Header */}
         <View className="items-center mb-4">
           {child.profilepic ? (
             <Image
