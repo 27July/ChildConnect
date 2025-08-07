@@ -22,7 +22,7 @@ although we recommend watching the demo video for a more comprehensive understan
 
 ## Getting Started:
 If you’d like to run this project on your own, follow the steps below to set up both the frontend and backend locally.
-> **Note:** You may wish to fork the [`stablity` branch](https://github.com/27July/ChildConnect/tree/stablity) instead of `main`, as code refactoring is still underway.
+> **Note:** You may wish to fork the [`stablity`](https://github.com/27July/ChildConnect/tree/stablity) branch instead of [`main`](https://github.com/27July/ChildConnect/tree/main), as code refactoring is still underway.
 
 ### Prerequisites🔧:
 Make sure you have the following installed:
