@@ -6,12 +6,13 @@ ChildConnect is a cross-platform mobile application designed to streamline commu
 ## Project Status:
 ✅ Development Fully Completed
 
-Note that this project was developed using Expo SDK 52. As a result, some users may experience compatibility issues when attempting to run the app with the Expo Go application, as SDK 52 is not fully supported in newer versions of Expo Go. There are currently no plans to take this project into production.
+**Note** that this project was developed using Expo SDK 52. As a result, some users may experience compatibility issues when attempting to run the app with the Expo Go application, as SDK 52 is not fully supported in newer versions of Expo Go. There are currently no plans to take this project into production.
 
 ## Technology and Tools:
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=plastic&logo=typescript&logoColor=white)![Python](https://img.shields.io/badge/python-3670A0?style=plastic&logo=python&logoColor=ffdd54)![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=plastic&logo=tailwind-css&logoColor=white)![React Native](https://img.shields.io/badge/react_native-%2320232a.svg?style=plastic&logo=react&logoColor=%2361DAFB)![Expo](https://img.shields.io/badge/expo-1C1E24?style=plastic&logo=expo&logoColor=#D04A37)![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=plastic&logo=fastapi)![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=plastic&logo=firebase&logoColor=black)![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=plastic&logo=cloudinary&logoColor=white)![Google Cloud](https://img.shields.io/badge/Google%20Cloud-4285F4?style=plastic&logo=google-cloud&logoColor=white)
 ## Demo Video: 
-Full screenshots of the project can be found within our documentations [here]() although we recommend watching the demo video for a more comprehensive understanding.
+Full screenshots of the project can be found within our documentation [here](https://github.com/27July/ChildConnect/tree/main/ChildConnect-documentation)
+although we recommend watching the demo video for a more comprehensive understanding.
 <br>
 <p align="center">
   <a href="https://www.youtube.com/watch?v=PAgPX3SsDjc">
@@ -21,6 +22,7 @@ Full screenshots of the project can be found within our documentations [here]() 
 
 ## Getting Started:
 If you’d like to run this project on your own, follow the steps below to set up both the frontend and backend locally.
+> **Note:** You may wish to fork the [`stability` branch](https://github.com/27July/ChildConnect/tree/stability) instead of `main`, as code refactoring is still underway.
 
 ### Prerequisites🔧:
 Make sure you have the following installed:
