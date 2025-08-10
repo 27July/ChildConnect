@@ -6,7 +6,8 @@ ChildConnect is a cross-platform mobile application designed to streamline commu
 ## Project Status:
 ✅ Development Fully Completed
 
-**Note** that this project was developed using Expo SDK 52. As a result, some users may experience compatibility issues when attempting to run the app with the Expo Go application, as SDK 52 is not fully supported in newer versions of Expo Go. There are currently no plans to take this project into production.
+**IMPORTANT**<br>
+<strong>Note that this project was developed using Expo SDK 52. As a result, some users may experience compatibility issues when attempting to run the app with the Expo Go application, as SDK 52 is not fully supported in newer versions of Expo Go. There are currently no plans to take this project into production. You may wish to fork the [`stablity`](https://github.com/27July/ChildConnect/tree/stablity) branch instead of [`main`](https://github.com/27July/ChildConnect/tree/main) as `main` is currently unstable.</strong>
 
 ## Technology and Tools:
 [![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=plastic&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) 
@@ -31,7 +32,7 @@ although we recommend watching the demo video for a more comprehensive understan
 
 ## Getting Started:
 If you’d like to run this project on your own, follow the steps below to set up both the frontend and backend locally.
-> **Note:** You may wish to fork the [`stablity`](https://github.com/27July/ChildConnect/tree/stablity) branch instead of [`main`](https://github.com/27July/ChildConnect/tree/main), as code refactoring is still underway.
+> **Note:** You may wish to fork the [`stablity`](https://github.com/27July/ChildConnect/tree/stablity) branch instead of [`main`](https://github.com/27July/ChildConnect/tree/main) as `main` is currently unstable.
 
 ### Prerequisites🔧:
 Make sure you have the following installed:
