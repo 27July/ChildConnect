@@ -1,6 +1,6 @@
 <h1 align="center">ChildConnect🏫</h1>
 
-## About the Project:
+## About:
 ChildConnect is a cross-platform mobile application designed to streamline communication between educators and parents for the wellbeing of their children. It offers a dependable solution for tracking children's progress while fully supporting both educational and administrative activities within the school environment. A full list of features that we provide are avaliable [here](#features).
 
 ## Project Status:
