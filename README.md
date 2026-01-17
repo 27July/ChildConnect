@@ -123,7 +123,7 @@ You may find this useful for future development.
 - View homework tasks
 - Passive location tracking when in Child Mode
 
-## Contributors
+## Contributors:
 
 | Name                        | GitHub Profile                                   | Contact                                       |
 |-----------------------------|--------------------------------------------------|-----------------------------------------------|
