@@ -4,7 +4,7 @@
 ChildConnect is a cross-platform mobile application designed to streamline communication between educators and parents for the wellbeing of their children. It offers a dependable solution for tracking children's progress while fully supporting both educational and administrative activities within the school environment. A full list of features that we provide are avaliable [here](#features).
 
 ## Project Status:
-✅ Development Fully Completed
+Development Fully Completed
 
 **IMPORTANT**<br>
 <strong>Note that this project was developed using Expo SDK 52. As a result, some users may experience compatibility issues when attempting to run the app with the Expo Go application, as SDK 52 is not fully supported in newer versions of Expo Go. There are currently no plans to take this project into production. You may wish to fork the [`stablity`](https://github.com/27July/ChildConnect/tree/stablity) branch instead of [`main`](https://github.com/27July/ChildConnect/tree/main) as `main` is currently unstable.</strong>
@@ -34,13 +34,13 @@ although we recommend watching the demo video for a more comprehensive understan
 If you’d like to run this project on your own, follow the steps below to set up both the frontend and backend locally.
 > **Note:** You may wish to fork the [`stablity`](https://github.com/27July/ChildConnect/tree/stablity) branch instead of [`main`](https://github.com/27July/ChildConnect/tree/main) as `main` is currently unstable.
 
-### Prerequisites🔧:
+### Prerequisites:
 Make sure you have the following installed:
 - Node.js (v18 or newer)
 - Python (v3.10 or newer)
 - A Firebase account (with a service account and Firestore project set up)
 - A Google Cloud Platform account (for Google Translate and other APIs)
-### Frontend Setup📱(React Native + Expo):
+### Frontend Setup (React Native + Expo):
 Make sure you have the Expo Go app installed on your mobile device if you're testing on a physical phone. (Note that this project was developed on SDK52)
 ```bash
 # Clone the repository
@@ -53,7 +53,7 @@ npm install
 # Start the Expo development server
 npx expo start
 ```
-### Backend Setup🖥️(FastAPI):
+### Backend Setup (FastAPI):
 Do note that both your frontend and backend setups have to be connected to the same network. A script has been written to enable the backend to utilise your network IP instead of the local IP.
 ```bash
 # Navigate to the backend folder
@@ -81,7 +81,7 @@ cp .env.example .env  # Use 'copy .env.example .env' on Windows
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 If anything is still unclear, feel free to contact us or refer to the documentation.
-### Project Structure📁:
+### Project Structure:
 
 ```
 ChildConnect/
@@ -123,32 +123,7 @@ You may find this useful for future development.
 - View homework tasks
 - Passive location tracking when in Child Mode
 
-## 🧾 Project Retrospective
-
-### What Went Well✅ 
-- Successfully delivered the product on schedule.
-- Rapid prototyping enabled quick testing and iteration of features.
-- The UI was designed for clarity and ease of use.
-- Documentation was thorough and consistently maintained.
-
-### What Could Be Improved🛠️
-- Faced initial challenges implementing the child tracking functionality.
-- Encountered issues during the setup of Google Cloud Run.
-- Parts of the codebase could benefit from refactoring for improved structure and clarity.
-- Dependency management could be improved for easier setup and fewer version conflicts.
-
-### Lessons Learned🎓
-- Integrating third-party services (e.g. Cloud Run) earlier in development helps surface configuration issues sooner.
-- Investing time in UI mockups early on greatly improved usability and feedback quality.
-- Writing modular, maintainable code from the start helps reduce technical debt.
-
-### Possible Action Items / Next Steps🔄
-- Refactor key areas of the codebase for better readability and maintainability.
-- Develop internal setup guides for features like child tracking and Google Cloud Run.
-- Adopt a consistent style guide or linter to improve code quality across the team.
-- Upgrade to SDK53
-
-## Contributors 👥
+## Contributors
 
 | Name                        | GitHub Profile                                   | Contact                                       |
 |-----------------------------|--------------------------------------------------|-----------------------------------------------|
