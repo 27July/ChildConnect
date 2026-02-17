@@ -3,22 +3,19 @@
 ## About:
 ChildConnect is a cross-platform mobile application designed to streamline communication between educators and parents for the wellbeing of their children. It offers a dependable solution for tracking children's progress while fully supporting both educational and administrative activities within the school environment. A full list of features that we provide are avaliable [here](#features).
 
-## Project Status:
-Development Fully Completed
-
 **IMPORTANT**<br>
 <strong>Note that this project was developed using Expo SDK 52. As a result, some users may experience compatibility issues when attempting to run the app with the Expo Go application, as SDK 52 is not fully supported in newer versions of Expo Go. There are currently no plans to take this project into production. You may wish to fork the [`stablity`](https://github.com/27July/ChildConnect/tree/stablity) branch instead of [`main`](https://github.com/27July/ChildConnect/tree/main) as `main` is currently unstable.</strong>
 
 ## Technology and Tools:
-[![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=plastic&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) 
-[![Python](https://img.shields.io/badge/python-3670A0?style=plastic&logo=python&logoColor=ffdd54)](https://www.python.org/) 
-[![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=plastic&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/) 
-[![React Native](https://img.shields.io/badge/react_native-%2320232a.svg?style=plastic&logo=react&logoColor=%2361DAFB)](https://reactnative.dev/) 
-[![Expo](https://img.shields.io/badge/expo-1C1E24?style=plastic&logo=expo&logoColor=#D04A37)](https://expo.dev/) 
-[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=plastic&logo=fastapi)](https://fastapi.tiangolo.com/) 
-[![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=plastic&logo=firebase&logoColor=black)](https://firebase.google.com/) 
-[![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=plastic&logo=cloudinary&logoColor=white)](https://cloudinary.com/) 
-[![Google Cloud](https://img.shields.io/badge/Google%20Cloud-4285F4?style=plastic&logo=google-cloud&logoColor=white)](https://cloud.google.com/)
+[![TypeScript](https://img.shields.io/badge/Typescript-%23007ACC.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/) 
+[![Python](https://img.shields.io/badge/Python-3670A0?logo=python&logoColor=ffdd54)](https://www.python.org/) 
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-%2338B2AC.svg?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/) 
+[![React Native](https://img.shields.io/badge/React_Native-%2320232a.svg?logo=react&logoColor=%2361DAFB)](https://reactnative.dev/) 
+[![Expo](https://img.shields.io/badge/Expo-1C1E24?logo=expo&logoColor=#D04A37)](https://expo.dev/) 
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?logo=fastapi)](https://fastapi.tiangolo.com/) 
+[![Firebase](https://img.shields.io/badge/Firebase-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com/) 
+[![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?logo=cloudinary&logoColor=white)](https://cloudinary.com/) 
+[![Google Cloud](https://img.shields.io/badge/Google%20Cloud-4285F4?logo=google-cloud&logoColor=white)](https://cloud.google.com/)
 
 ## Demo Video: 
 Full screenshots of the project can be found within our documentation [here](https://github.com/27July/ChildConnect/tree/main/ChildConnect-documentation)
